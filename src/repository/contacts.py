@@ -30,7 +30,7 @@ class ContactsRepository:
 
         return (await self.db.execute(query)).scalars().all()
 
-    async def get_unique(self):
+    async def get_one(self):
         pass
 
     async def create(self):
