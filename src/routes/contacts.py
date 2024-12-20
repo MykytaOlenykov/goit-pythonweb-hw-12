@@ -20,3 +20,13 @@ async def get_contacts(
     contacts_service = ContactsService(db)
     contacts = await contacts_service.get_all(search=search)
     return contacts
+
+
+@router.get("/{id}", response_model=ResponseContactModel)
+async def get_contacts(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    contacts_service = ContactsService(db)
+    contact = await contacts_service.get_by_id(id)
+    return contact

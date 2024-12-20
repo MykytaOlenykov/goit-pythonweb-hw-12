@@ -30,8 +30,14 @@ class ContactsRepository:
 
         return (await self.db.execute(query)).scalars().all()
 
-    async def get_one(self):
-        pass
+    async def get_one_or_none(
+        self,
+        filters: List[Any] | None = None,
+        order_by: Any = "id",
+    ):
+        return (
+            await self.db.execute(select(Contact).filter(*filters).order_by(order_by))
+        ).scalar_one_or_none()
 
     async def create(self):
         pass

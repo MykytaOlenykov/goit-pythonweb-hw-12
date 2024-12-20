@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,8 +33,17 @@ class ContactsService:
             limit=limit,
         )
 
-    async def get_by_id(self):
-        pass
+    async def get_by_id(self, id: int):
+        filters = [Contact.id == id]
+        contact = await self.contacts_repository.get_one_or_none(filters=filters)
+
+        if contact is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contact not found",
+            )
+
+        return contact
 
     async def create(self):
         pass
