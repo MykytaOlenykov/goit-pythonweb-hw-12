@@ -1,11 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.contacts import ContactsService
-from src.schemas import ResponseContactModel
+from src.schemas import ContactModel, ResponseContactModel
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
@@ -18,8 +18,7 @@ async def get_contacts(
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
-    contacts = await contacts_service.get_all(search=search)
-    return contacts
+    return await contacts_service.get_all(search=search)
 
 
 @router.get("/{id}", response_model=ResponseContactModel)
@@ -28,5 +27,17 @@ async def get_contacts(
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
-    contact = await contacts_service.get_by_id(id)
-    return contact
+    return await contacts_service.get_by_id(id)
+
+
+@router.post(
+    "/",
+    response_model=ResponseContactModel,
+    status_code=status.HTTP_201_CREATED,
+)
+async def get_contacts(
+    body: ContactModel,
+    db: AsyncSession = Depends(get_db),
+):
+    contacts_service = ContactsService(db)
+    return await contacts_service.create(body)

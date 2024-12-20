@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Contact
+from src.schemas import ContactModel
 
 
 class ContactsRepository:
@@ -39,8 +40,12 @@ class ContactsRepository:
             await self.db.execute(select(Contact).filter(*filters).order_by(order_by))
         ).scalar_one_or_none()
 
-    async def create(self):
-        pass
+    async def create(self, body: ContactModel):
+        contact = Contact(**body.model_dump())
+        self.db.add(contact)
+        await self.db.commit()
+        await self.db.refresh(contact)
+        return contact
 
     async def update(self):
         pass
