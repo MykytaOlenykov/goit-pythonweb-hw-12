@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.contacts import ContactsService
-from src.schemas import ContactModel, ResponseContactModel
+from src.schemas import ContactCreateModel, ContactUpdateModel, ResponseContactModel
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
@@ -36,8 +36,18 @@ async def get_contacts(
     status_code=status.HTTP_201_CREATED,
 )
 async def get_contacts(
-    body: ContactModel,
+    body: ContactCreateModel,
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
     return await contacts_service.create(body)
+
+
+@router.put("/{id}", response_model=ResponseContactModel)
+async def get_contacts(
+    body: ContactUpdateModel,
+    id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    contacts_service = ContactsService(db)
+    return await contacts_service.update_by_id(body, id)

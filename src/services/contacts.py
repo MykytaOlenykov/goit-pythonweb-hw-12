@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.contacts import ContactsRepository
 from src.database.models import Contact
-from src.schemas import ContactModel
+from src.schemas import ContactCreateModel, ContactUpdateModel
 
 
 class ContactsService:
@@ -46,11 +46,12 @@ class ContactsService:
 
         return contact
 
-    async def create(self, body: ContactModel):
+    async def create(self, body: ContactCreateModel):
         return await self.contacts_repository.create(body)
 
-    async def update_by_id(self):
-        pass
+    async def update_by_id(self, body: ContactUpdateModel, id: int):
+        await self.get_by_id(id)
+        return await self.contacts_repository.update(body=body, contact_id=id)
 
-    async def remove_by_id(self):
+    async def delete_by_id(self):
         pass
