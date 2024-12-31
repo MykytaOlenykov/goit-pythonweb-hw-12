@@ -29,7 +29,7 @@ async def get_contacts(
 
 
 @router.get("/{id}", response_model=ResponseContactModel)
-async def get_contacts(
+async def get_contact_by_id(
     id: int,
     db: AsyncSession = Depends(get_db),
 ):
@@ -42,7 +42,7 @@ async def get_contacts(
     response_model=ResponseContactModel,
     status_code=status.HTTP_201_CREATED,
 )
-async def get_contacts(
+async def create_contact(
     body: ContactCreateModel,
     db: AsyncSession = Depends(get_db),
 ):
@@ -51,7 +51,7 @@ async def get_contacts(
 
 
 @router.put("/{id}", response_model=ResponseContactModel)
-async def get_contacts(
+async def update_contact_by_id(
     body: ContactUpdateModel,
     id: int,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +61,7 @@ async def get_contacts(
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def get_contacts(
+async def delete_contact_by_id(
     id: int,
     db: AsyncSession = Depends(get_db),
 ):

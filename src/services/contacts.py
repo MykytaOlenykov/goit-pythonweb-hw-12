@@ -1,12 +1,12 @@
 from datetime import date, timedelta
 
-from fastapi import HTTPException, status
-from sqlalchemy import or_, extract, func
+from sqlalchemy import or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.contacts import ContactsRepository
 from src.database.models import Contact
 from src.schemas import ContactCreateModel, ContactUpdateModel
+from src.utils import HTTPNotFoundException
 
 
 class ContactsService:
@@ -55,10 +55,7 @@ class ContactsService:
         contact = await self.contacts_repository.get_one_or_none(filters=filters)
 
         if contact is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Contact not found",
-            )
+            raise HTTPNotFoundException("Contact not found")
 
         return contact
 

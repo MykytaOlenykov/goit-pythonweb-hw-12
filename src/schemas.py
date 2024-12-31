@@ -3,13 +3,15 @@ from datetime import datetime, date
 from typing import Any
 from pydantic import BaseModel, Field, EmailStr, model_validator
 
+from src.utils import HTTPBadRequestException
+
 
 def validate_birthday(value: Any):
     if isinstance(value, str):
         try:
             datetime.strptime(value, "%Y-%m-%d").date()
         except ValueError:
-            raise ValueError("Invalid date format. Expected YYYY-MM-DD.")
+            raise HTTPBadRequestException("Invalid date format. Expected YYYY-MM-DD.")
 
 
 class ContactCreateModel(BaseModel):
@@ -37,7 +39,9 @@ class ContactUpdateModel(BaseModel):
     def check_not_none(cls, values):
         for field, value in values.items():
             if value is None:
-                raise ValueError(f"{field} cannot be null if explicitly provided.")
+                raise HTTPBadRequestException(
+                    f"{field} cannot be null if explicitly provided."
+                )
         return values
 
     @model_validator(mode="before")
