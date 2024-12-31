@@ -15,10 +15,17 @@ async def get_contacts(
     search: str | None = Query(
         default=None, description="Search by first_name, last_name and email"
     ),
+    birthdays_within: int | None = Query(
+        default=None,
+        description="Filter contacts with birthdays within the given number of days",
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
-    return await contacts_service.get_all(search=search)
+    return await contacts_service.get_all(
+        search=search,
+        birthdays_within=birthdays_within,
+    )
 
 
 @router.get("/{id}", response_model=ResponseContactModel)

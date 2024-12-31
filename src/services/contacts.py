@@ -1,5 +1,7 @@
+from datetime import date, timedelta
+
 from fastapi import HTTPException, status
-from sqlalchemy import or_
+from sqlalchemy import or_, extract, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.contacts import ContactsRepository
@@ -14,19 +16,33 @@ class ContactsService:
     async def get_all(
         self,
         search: str | None = None,
+        birthdays_within: int | None = None,
         offset: int | None = None,
         limit: int | None = None,
     ):
-        filters = None
+        filters = []
 
         if search is not None:
-            filters = [
+            filters.append(
                 or_(
                     Contact.first_name.like(f"%{search}%"),
                     Contact.last_name.like(f"%{search}%"),
                     Contact.email.like(f"%{search}%"),
-                ),
-            ]
+                )
+            )
+
+        if birthdays_within is not None:
+            today = date.today()
+            current_year = today.year
+
+            birthday_month = func.extract("month", Contact.birthday)
+            birthday_day = func.extract("day", Contact.birthday)
+            birthday_this_year = func.date(
+                func.concat(current_year, "-", birthday_month, "-", birthday_day)
+            )
+
+            end_date = today + timedelta(days=birthdays_within)
+            filters.append(birthday_this_year.between(today, end_date))
 
         return await self.contacts_repository.get_all(
             filters=filters,
