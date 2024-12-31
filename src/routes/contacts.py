@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Query, Depends, status
+from fastapi import APIRouter, Query, Depends, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
@@ -51,3 +51,13 @@ async def get_contacts(
 ):
     contacts_service = ContactsService(db)
     return await contacts_service.update_by_id(body, id)
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def get_contacts(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    contacts_service = ContactsService(db)
+    await contacts_service.delete_by_id(id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

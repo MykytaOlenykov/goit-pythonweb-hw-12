@@ -53,5 +53,6 @@ class ContactsService:
         await self.get_by_id(id)
         return await self.contacts_repository.update(body=body, contact_id=id)
 
-    async def delete_by_id(self):
-        pass
+    async def delete_by_id(self, id):
+        contact = await self.get_by_id(id)
+        return await self.contacts_repository.delete(contact)
