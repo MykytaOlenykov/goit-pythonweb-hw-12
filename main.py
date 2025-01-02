@@ -1,4 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from src.routes.contacts import router as contacts_router
 
@@ -6,6 +9,17 @@ from src.routes.contacts import router as contacts_router
 ROUTERS = [contacts_router]
 
 app = FastAPI()
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_: Request, exc: ValidationError):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "detail": exc.errors(),
+        },
+    )
+
 
 for router in ROUTERS:
     app.include_router(router, prefix="/api")

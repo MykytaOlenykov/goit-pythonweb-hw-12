@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.db import get_db
 from src.services.contacts import ContactsService
 from src.schemas import ContactCreateModel, ContactUpdateModel, ResponseContactModel
+from src.utils import bad_request_response_docs, not_found_response_docs
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
@@ -28,7 +29,11 @@ async def get_contacts(
     )
 
 
-@router.get("/{id}", response_model=ResponseContactModel)
+@router.get(
+    "/{id}",
+    response_model=ResponseContactModel,
+    responses={**not_found_response_docs},
+)
 async def get_contact_by_id(
     id: int,
     db: AsyncSession = Depends(get_db),
@@ -39,8 +44,9 @@ async def get_contact_by_id(
 
 @router.post(
     "/",
-    response_model=ResponseContactModel,
     status_code=status.HTTP_201_CREATED,
+    response_model=ResponseContactModel,
+    responses={**bad_request_response_docs},
 )
 async def create_contact(
     body: ContactCreateModel,
@@ -50,7 +56,14 @@ async def create_contact(
     return await contacts_service.create(body)
 
 
-@router.put("/{id}", response_model=ResponseContactModel)
+@router.put(
+    "/{id}",
+    response_model=ResponseContactModel,
+    responses={
+        **bad_request_response_docs,
+        **not_found_response_docs,
+    },
+)
 async def update_contact_by_id(
     body: ContactUpdateModel,
     id: int,
@@ -60,7 +73,11 @@ async def update_contact_by_id(
     return await contacts_service.update_by_id(body, id)
 
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={**not_found_response_docs},
+)
 async def delete_contact_by_id(
     id: int,
     db: AsyncSession = Depends(get_db),
