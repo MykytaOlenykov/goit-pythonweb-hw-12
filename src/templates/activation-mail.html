@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Account Activation</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+        line-height: 1.6;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        padding: 10px 0;
+      }
+      .header h1 {
+        color: #4caf50;
+      }
+      .content {
+        margin: 20px 0;
+      }
+      .content p {
+        margin: 10px 0;
+      }
+      .button {
+        display: block;
+        width: 200px;
+        margin: 20px auto;
+        text-align: center;
+        background-color: #4caf50;
+        color: #fff !important;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Welcome, {{ username }}!</h1>
+      </div>
+      <div class="content">
+        <p>
+          Thank you for registering with us, {{ username }}. Please confirm your
+          email address to activate your account:
+        </p>
+        <a href="{{ activation_url }}" class="button">Activate Account</a>
+      </div>
+    </div>
+  </body>
+</html>

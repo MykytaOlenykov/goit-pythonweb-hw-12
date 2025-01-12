@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import BackgroundTasks, APIRouter, Request, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
@@ -17,9 +17,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
     responses={**bad_request_response_docs, **conflict_response_docs},
 )
 async def create_contact(
+    background_tasks: BackgroundTasks,
     body: UserCreateModel,
     db: AsyncSession = Depends(get_db),
 ):
     auth_service = AuthService(db)
-    await auth_service.signup(body)
+    await auth_service.signup(background_tasks, body)
     return {"message": "ok"}

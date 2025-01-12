@@ -18,6 +18,7 @@ greenlet = "^3.1.1"
 pyjwt = "^2.10.1"
 bcrypt = "^4.2.1"
 pydantic-settings = "^2.7.1"
+fastapi-mail = "^1.4.2"
 
 
 [build-system]

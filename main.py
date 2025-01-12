@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from src.routes.auth import router as auth_router
 from src.routes.contacts import router as contacts_router
+from src.settings import settings
 
 
 ROUTERS = [auth_router, contacts_router]
@@ -28,4 +29,4 @@ for router in ROUTERS:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host=settings.HOST, port=settings.PORT, reload=True)
