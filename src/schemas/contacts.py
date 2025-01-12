@@ -3,7 +3,7 @@ from datetime import datetime, date
 from typing import Any
 from pydantic import BaseModel, Field, EmailStr, model_validator
 
-from src.utils import HTTPBadRequestException
+from src.utils.exceptions import HTTPBadRequestException
 
 
 def validate_birthday(value: Any):

@@ -5,11 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.contacts import ContactsRepository
 from src.database.models import Contact
-from src.schemas import ContactCreateModel, ContactUpdateModel
-from src.utils import HTTPNotFoundException
+from src.schemas.contacts import ContactCreateModel, ContactUpdateModel
+from src.utils.exceptions import HTTPNotFoundException
 
 
 class ContactsService:
+
     def __init__(self, db: AsyncSession):
         self.contacts_repository = ContactsRepository(db)
 
@@ -66,6 +67,6 @@ class ContactsService:
         await self.get_by_id(id)
         return await self.contacts_repository.update(body=body, contact_id=id)
 
-    async def delete_by_id(self, id):
+    async def delete_by_id(self, id: int):
         contact = await self.get_by_id(id)
         return await self.contacts_repository.delete(contact)

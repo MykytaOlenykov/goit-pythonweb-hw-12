@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Contact
-from src.schemas import ContactCreateModel
+from src.schemas.contacts import ContactCreateModel
 
 
 class ContactsRepository:

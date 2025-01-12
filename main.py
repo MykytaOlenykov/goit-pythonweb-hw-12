@@ -3,10 +3,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from src.routes.auth import router as auth_router
 from src.routes.contacts import router as contacts_router
 
 
-ROUTERS = [contacts_router]
+ROUTERS = [auth_router, contacts_router]
 
 app = FastAPI()
 

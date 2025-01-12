@@ -5,8 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.contacts import ContactsService
-from src.schemas import ContactCreateModel, ContactUpdateModel, ResponseContactModel
-from src.utils import bad_request_response_docs, not_found_response_docs
+from src.schemas.contacts import (
+    ContactCreateModel,
+    ContactUpdateModel,
+    ResponseContactModel,
+)
+from src.utils.exceptions import bad_request_response_docs, not_found_response_docs
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
