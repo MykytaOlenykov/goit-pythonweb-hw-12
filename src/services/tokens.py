@@ -32,18 +32,18 @@ class TokensService:
         token = await self.get_token_or_fail(token)
         return await self.tokens_repository.delete(token)
 
-    async def create_activation_token(self, payload: BaseTokenPayloadCreateModel):
+    async def create_verification_token(self, payload: BaseTokenPayloadCreateModel):
         data = {
             **payload.model_dump(),
-            "token_type": TokenType.ACTIVATION,
+            "token_type": TokenType.VERIFICATION,
         }
         jwt = create_jwt(
             data=data,
-            expire_time_seconds=settings.JWT_ACTIVATION_EXPIRATION_SECONDS,
+            expire_time_seconds=settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
         )
         body = TokenCreateModel(
             token=jwt,
-            type=TokenType.ACTIVATION,
+            type=TokenType.VERIFICATION,
             user_id=payload.user_id,
         )
         return await self.create(body)

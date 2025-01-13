@@ -4,7 +4,7 @@ from enum import Enum
 from fastapi import BackgroundTasks
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
-from src.schemas.mail import ActivationMail
+from src.schemas.mail import VerificationMail
 from src.settings import settings
 
 conf = ConnectionConfig(
@@ -23,7 +23,7 @@ conf = ConnectionConfig(
 
 
 class MailTemplates(str, Enum):
-    ACTIVATION = "activation-mail.html"
+    VERIFICATION = "verification-mail.html"
 
 
 class MailService:
@@ -52,15 +52,15 @@ class MailService:
             template_name=template_name.value,
         )
 
-    def send_activation_mail(
+    def send_verification_mail(
         self,
         background_tasks: BackgroundTasks,
-        body: ActivationMail,
+        body: VerificationMail,
     ):
         self.send_mail(
             background_tasks=background_tasks,
             subject="Activate your account",
             recipients=[body.email],
             template_body={**body.model_dump()},
-            template_name=MailTemplates.ACTIVATION,
+            template_name=MailTemplates.VERIFICATION,
         )

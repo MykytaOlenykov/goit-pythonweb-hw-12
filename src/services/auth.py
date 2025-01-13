@@ -3,14 +3,16 @@ from urllib.parse import urljoin
 from fastapi import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.database.models import TokenType, UserStatus
 from src.services.users import UsersService
 from src.services.tokens import TokensService
 from src.services.mail import MailService, conf
 from src.schemas.users import UserCreateModel
-from src.schemas.tokens import BaseTokenPayloadCreateModel
-from src.schemas.mail import ActivationMail
-from src.utils.exceptions import HTTPConflictException
+from src.schemas.tokens import BaseTokenPayloadCreateModel, BaseTokenPayloadModel
+from src.schemas.mail import VerificationMail
+from src.utils.exceptions import HTTPUnauthorizedException, HTTPConflictException
 from src.utils.hashing import hash_secret
+from src.utils.tokens import decode_jwt
 from src.settings import settings
 
 
@@ -33,12 +35,12 @@ class AuthService:
         created_user = await self.users_service.create(body)
 
         payload = BaseTokenPayloadCreateModel(user_id=created_user.id)
-        token = await self.tokens_service.create_activation_token(payload)
+        token = await self.tokens_service.create_verification_token(payload)
 
-        activation_url = urljoin(settings.BASE_URL, f"api/auth/activate/{token.token}")
-        mail_body = ActivationMail(
-            activation_url=activation_url,
+        verification_url = urljoin(settings.BASE_URL, f"api/auth/verify/{token.token}")
+        mail_body = VerificationMail(
+            verification_url=verification_url,
             email=body.email,
             username=body.username,
         )
-        self.mail_service.send_activation_mail(background_tasks, mail_body)
+        self.mail_service.send_verification_mail(background_tasks, mail_body)

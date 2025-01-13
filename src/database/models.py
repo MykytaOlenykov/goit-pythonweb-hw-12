@@ -36,7 +36,7 @@ class User(Base):
 
 class TokenType(str, Enum):
     REFRESH = "refresh"
-    ACTIVATION = "activation"
+    VERIFICATION = "verification"
 
 
 class Token(Base):

@@ -1,8 +1,8 @@
 """user_and_token_models
 
-Revision ID: 51eccca94806
+Revision ID: 9af8dd66ea8d
 Revises: c372ff05fc20
-Create Date: 2025-01-12 22:51:16.266191
+Create Date: 2025-01-13 02:08:12.743548
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '51eccca94806'
+revision: str = '9af8dd66ea8d'
 down_revision: Union[str, None] = 'c372ff05fc20'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,7 +33,7 @@ def upgrade() -> None:
     op.create_table('tokens',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('token', sa.String(), nullable=False),
-    sa.Column('type', sa.Enum('REFRESH', 'ACTIVATION', name='tokentype'), nullable=False),
+    sa.Column('type', sa.Enum('REFRESH', 'VERIFICATION', name='tokentype'), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),

@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     JWT_ALGORITHM: str = "HS256"
     JWT_SECRET: str
-    JWT_ACTIVATION_EXPIRATION_SECONDS: int
+    JWT_VERIFICATION_EXPIRATION_SECONDS: int
 
     MAIL_USERNAME: str
     MAIL_PASSWORD: str

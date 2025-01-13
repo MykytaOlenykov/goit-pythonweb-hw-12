@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.users import UsersRepository
-from src.database.models import User
+from src.database.models import User, UserStatus
 from src.schemas.users import UserCreateModel
 from src.utils.exceptions import HTTPNotFoundException
 

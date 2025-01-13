@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Account Activation</title>
+    <title>Account Verification</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -50,14 +50,14 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>Welcome, {{ username }}!</h1>
+        <h1>Hello, {{ username }}!</h1>
       </div>
       <div class="content">
         <p>
-          Thank you for registering with us, {{ username }}. Please confirm your
-          email address to activate your account:
+          Thank you for registering with us, {{ username }}. To verify your
+          email address and activate your account, please click the link below:
         </p>
-        <a href="{{ activation_url }}" class="button">Activate Account</a>
+        <a href="{{ verification_url }}" class="button">Verify Account</a>
       </div>
     </div>
   </body>

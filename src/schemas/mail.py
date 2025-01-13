@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class ActivationMail(BaseModel):
+class VerificationMail(BaseModel):
     username: str
     email: str
-    activation_url: str
+    verification_url: str
