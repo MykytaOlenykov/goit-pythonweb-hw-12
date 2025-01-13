@@ -2,4 +2,8 @@ from pydantic import BaseModel
 
 
 class ResponseSignupModel(BaseModel):
-    message: str = "ok"
+    message: str
+
+
+class ResponseVerifyModel(BaseModel):
+    message: str

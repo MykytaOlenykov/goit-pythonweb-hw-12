@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.users import UsersRepository
 from src.database.models import User, UserStatus
-from src.schemas.users import UserCreateModel
+from src.schemas.users import UserCreateModel, UserStatusUpdateModel
 from src.utils.exceptions import HTTPNotFoundException
 
 
@@ -26,3 +26,12 @@ class UsersService:
 
     async def create(self, body: UserCreateModel):
         return await self.users_repository.create(body)
+
+    async def change_user_status_by_id(self, id: int, status: UserStatus):
+        body = UserStatusUpdateModel(status=status)
+        user = await self.users_repository.update(user_id=id, body=body)
+
+        if user is None:
+            raise HTTPNotFoundException("User not found")
+
+        return user

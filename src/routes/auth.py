@@ -1,13 +1,14 @@
-from fastapi import BackgroundTasks, APIRouter, Request, Depends, status
+from fastapi import BackgroundTasks, APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.auth import AuthService
-from src.schemas.auth import ResponseSignupModel
+from src.schemas.auth import ResponseSignupModel, ResponseVerifyModel
 from src.schemas.users import UserCreateModel
 from src.utils.exceptions import (
     bad_request_response_docs,
     unauthorized_response_docs,
+    not_found_response_docs,
     conflict_response_docs,
 )
 
@@ -27,17 +28,26 @@ async def create_contact(
 ):
     auth_service = AuthService(db)
     await auth_service.signup(background_tasks, body)
-    return {"message": "ok"}
+    return {
+        "message": "Registration successful. Please check your email to activate your account."
+    }
 
 
 @router.get(
     "/verify/{token}",
     status_code=status.HTTP_200_OK,
-    responses={**bad_request_response_docs, **unauthorized_response_docs},
+    response_model=ResponseVerifyModel,
+    responses={
+        **not_found_response_docs,
+        **unauthorized_response_docs,
+    },
 )
-async def activate_account(
+async def verify_user(
     token: str,
     db: AsyncSession = Depends(get_db),
 ):
     auth_service = AuthService(db)
-    return await auth_service.verify(token)
+    await auth_service.verify_user(token)
+    return {
+        "message": "Your email has been successfully verified. You can now log in to your account."
+    }
