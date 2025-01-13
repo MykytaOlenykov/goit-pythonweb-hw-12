@@ -11,7 +11,7 @@ def validate_birthday(value: Any):
         try:
             datetime.strptime(value, "%Y-%m-%d").date()
         except ValueError:
-            raise HTTPBadRequestException("Invalid date format. Expected YYYY-MM-DD.")
+            raise HTTPBadRequestException("Invalid date format. Expected YYYY-MM-DD")
 
 
 class ContactCreateModel(BaseModel):
@@ -40,7 +40,7 @@ class ContactUpdateModel(BaseModel):
         for field, value in values.items():
             if value is None:
                 raise HTTPBadRequestException(
-                    f"{field} cannot be null if explicitly provided."
+                    f"{field} cannot be null if explicitly provided"
                 )
         return values
 
