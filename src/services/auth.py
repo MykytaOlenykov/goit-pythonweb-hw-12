@@ -7,6 +7,7 @@ from src.database.models import TokenType, UserStatus
 from src.services.users import UsersService
 from src.services.tokens import TokensService
 from src.services.mail import MailService, conf
+from src.schemas.auth import VerifyModel
 from src.schemas.users import UserCreateModel
 from src.schemas.tokens import BaseTokenPayloadCreateModel, BaseTokenPayloadModel
 from src.schemas.mail import VerificationMail
@@ -23,6 +24,7 @@ from src.utils.exceptions import (
 class AuthService:
 
     def __init__(self, db: AsyncSession):
+        self.db = db
         self.users_service = UsersService(db)
         self.tokens_service = TokensService(db)
         self.mail_service = MailService(conf)
@@ -31,7 +33,7 @@ class AuthService:
         user = await self.users_service.get_by_email_or_none(email=body.email)
 
         if user:
-            raise HTTPConflictException("User exists")
+            raise HTTPConflictException("A user with this email already exists")
 
         hashed_password = hash_secret(body.email)
         body.password = hashed_password
@@ -65,8 +67,43 @@ class AuthService:
         except HTTPNotFoundException:
             raise HTTPUnauthorizedException("Invalid token")
 
+        user = await self.users_service.get_by_id_or_fail(verified_payload.user_id)
+
+        if user.status != UserStatus.REGISTERED:
+            raise HTTPConflictException("User is already verified")
+
         await self.users_service.change_user_status_by_id(
             id=verified_payload.user_id,
             status=UserStatus.VERIFIED,
         )
         await self.tokens_service.delete_token(token)
+
+    async def resend_verification_email(
+        self,
+        background_tasks: BackgroundTasks,
+        body: VerifyModel,
+    ):
+        user = await self.users_service.get_by_email_or_none(body.email)
+        user_id = user.id
+        username = user.username
+        email = user.email
+
+        if user is None:
+            raise HTTPNotFoundException("User with the specified email was not found")
+
+        if user.status != UserStatus.REGISTERED:
+            raise HTTPConflictException("User is already verified")
+
+        tokens = list(filter(lambda x: x.type == TokenType.VERIFICATION, user.tokens))
+        await self.tokens_service.delete_many_tokens([token.token for token in tokens])
+
+        payload = BaseTokenPayloadCreateModel(user_id=user_id)
+        token = await self.tokens_service.create_verification_token(payload)
+
+        verification_url = urljoin(settings.BASE_URL, f"api/auth/verify/{token.token}")
+        mail_body = VerificationMail(
+            verification_url=verification_url,
+            email=email,
+            username=username,
+        )
+        self.mail_service.send_verification_mail(background_tasks, mail_body)

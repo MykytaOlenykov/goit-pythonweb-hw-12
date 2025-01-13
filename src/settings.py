@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     HOST: str = "localhost"
     BASE_URL: str = "http://localhost:8000"
     DB_URL: str
+    ECHO_SQL: bool
 
     JWT_ALGORITHM: str = "HS256"
     JWT_SECRET: str

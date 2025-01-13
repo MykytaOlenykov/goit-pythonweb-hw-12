@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repository.tokens import TokensRepository
@@ -28,6 +30,9 @@ class TokensService:
     async def delete_token(self, token: str):
         token = await self.get_token_or_fail(token)
         return await self.tokens_repository.delete(token)
+
+    async def delete_many_tokens(self, tokens: List[str]):
+        await self.tokens_repository.delete_many(tokens)
 
     async def create_verification_token(self, payload: BaseTokenPayloadCreateModel):
         data = {

@@ -1,6 +1,6 @@
 from typing import List, Any
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Token
@@ -32,3 +32,9 @@ class TokensRepository:
         await self.db.delete(token)
         await self.db.commit()
         return token
+
+    async def delete_many(self, tokens: list[str]):
+        stmt = delete(Token).where(Token.token.in_(tokens))
+        result = await self.db.execute(stmt)
+        await self.db.commit()
+        return result.rowcount

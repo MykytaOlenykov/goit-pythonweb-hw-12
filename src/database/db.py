@@ -1,4 +1,5 @@
 import contextlib
+from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
@@ -11,8 +12,11 @@ from src.settings import settings
 
 
 class DatabaseSessionManager:
-    def __init__(self, url: str):
-        self._engine: AsyncEngine | None = create_async_engine(url)
+
+    def __init__(self, url: str, engine_kwargs: dict[str, Any] | None = None):
+        self._engine: AsyncEngine | None = create_async_engine(
+            url, **(engine_kwargs or {})
+        )
         self._session_maker: async_sessionmaker = async_sessionmaker(
             autoflush=False, autocommit=False, bind=self._engine
         )
@@ -31,7 +35,7 @@ class DatabaseSessionManager:
             await session.close()
 
 
-sessionmanager = DatabaseSessionManager(settings.DB_URL)
+sessionmanager = DatabaseSessionManager(settings.DB_URL, {"echo": settings.ECHO_SQL})
 
 
 async def get_db():
