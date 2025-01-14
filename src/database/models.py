@@ -30,7 +30,7 @@ class User(Base):
         nullable=False,
     )
 
-    tokens: Mapped[List["Token"]] = relationship(back_populates="user", lazy="selectin")
+    tokens: Mapped[List["Token"]] = relationship(back_populates="user")
     contacts: Mapped[List["Contact"]] = relationship(back_populates="user")
 
 

@@ -15,6 +15,21 @@ class TokensService:
     def __init__(self, db: AsyncSession):
         self.tokens_repository = TokensRepository(db)
 
+    async def get_tokens(
+        self,
+        user_id: int | None = None,
+        type: TokenType | None = None,
+    ):
+        filters = []
+
+        if user_id:
+            filters.append(Token.user_id == user_id)
+
+        if type:
+            filters.append(Token.type == type)
+
+        return await self.tokens_repository.get_all(filters=filters)
+
     async def get_token_or_fail(self, token: str):
         filters = [Token.token == token]
         token = await self.tokens_repository.get_one_or_none(filters=filters)

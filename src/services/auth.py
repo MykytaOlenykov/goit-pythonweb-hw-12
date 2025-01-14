@@ -117,7 +117,10 @@ class AuthService:
         if user.status != UserStatus.REGISTERED:
             raise HTTPConflictException("User is already verified")
 
-        tokens = list(filter(lambda x: x.type == TokenType.VERIFICATION, user.tokens))
+        tokens = await self.tokens_service.get_tokens(
+            user_id=user_id,
+            type=TokenType.VERIFICATION,
+        )
         await self.tokens_service.delete_many_tokens([token.token for token in tokens])
 
         payload = BaseTokenPayloadCreateModel(user_id=user_id)
