@@ -16,7 +16,14 @@ class ResponseSignupModel(BaseModel):
 
 class ResponseLoginModel(BaseModel):
     access_token: str
-    token_type: str = "bearer"
+    token_type: str = Field(examples=["bearer"])
+
+
+class ResponseCurrentUserModel(BaseModel):
+    id: int = Field(examples=[1])
+    username: str
+    email: EmailStr
+    avatar_url: str | None
 
 
 class ResponseVerifyModel(BaseModel):

@@ -2,6 +2,7 @@ from fastapi import Response, BackgroundTasks, APIRouter, Depends, Cookie, statu
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
+from src.database.models import User
 from src.services.auth import AuthService
 from src.settings import settings
 from src.schemas.users import UserCreateModel
@@ -10,6 +11,7 @@ from src.schemas.auth import (
     VerifyModel,
     ResponseSignupModel,
     ResponseLoginModel,
+    ResponseCurrentUserModel,
     ResponseVerifyModel,
 )
 from src.utils.authenticate import authenticate
@@ -78,6 +80,21 @@ async def logout(
     auth_service = AuthService(db)
     await auth_service.logout(refresh_token)
     response.delete_cookie("refresh_token", httponly=True, secure=True)
+
+
+@router.get(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseCurrentUserModel,
+    responses={**unauthorized_response_docs},
+)
+async def me(user: User = Depends(authenticate)):
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "avatar_url": user.avatar_url,
+    }
 
 
 @router.get(
