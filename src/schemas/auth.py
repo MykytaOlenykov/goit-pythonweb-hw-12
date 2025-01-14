@@ -16,6 +16,7 @@ class ResponseSignupModel(BaseModel):
 
 class ResponseLoginModel(BaseModel):
     access_token: str
+    token_type: str = "bearer"
 
 
 class ResponseVerifyModel(BaseModel):

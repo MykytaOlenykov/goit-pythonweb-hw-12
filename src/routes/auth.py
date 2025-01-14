@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.auth import AuthService
-from src.services.tokens import TokensService
 from src.schemas.users import UserCreateModel
 from src.settings import settings
 from src.schemas.auth import (
@@ -29,7 +28,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
     response_model=ResponseSignupModel,
     responses={**bad_request_response_docs, **conflict_response_docs},
 )
-async def create_contact(
+async def signup(
     background_tasks: BackgroundTasks,
     body: UserCreateModel,
     db: AsyncSession = Depends(get_db),
@@ -47,7 +46,7 @@ async def create_contact(
     response_model=ResponseLoginModel,
     responses={**bad_request_response_docs, **unauthorized_response_docs},
 )
-async def create_contact(
+async def login(
     response: Response,
     body: LoginModel,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +60,7 @@ async def create_contact(
         httponly=True,
         secure=True,
     )
-    return {"access_token": tokens.get("access_token")}
+    return {"access_token": tokens.get("access_token"), "token_type": "bearer"}
 
 
 @router.get(
