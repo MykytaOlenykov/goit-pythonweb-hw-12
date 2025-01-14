@@ -1,8 +1,8 @@
 """user_and_token_models
 
-Revision ID: 9af8dd66ea8d
+Revision ID: 8037a248e249
 Revises: c372ff05fc20
-Create Date: 2025-01-13 02:08:12.743548
+Create Date: 2025-01-14 01:58:52.431817
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '9af8dd66ea8d'
+revision: str = '8037a248e249'
 down_revision: Union[str, None] = 'c372ff05fc20'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,14 +26,14 @@ def upgrade() -> None:
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('avatar_url', sa.String(), nullable=True),
     sa.Column('password', sa.String(), nullable=False),
-    sa.Column('status', sa.Enum('REGISTERED', 'VERIFIED', 'DELETED', name='userstatus'), nullable=False),
+    sa.Column('status', sa.Enum('REGISTERED', 'VERIFIED', 'DELETED', name='user_status'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
     op.create_table('tokens',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('token', sa.String(), nullable=False),
-    sa.Column('type', sa.Enum('REFRESH', 'VERIFICATION', name='tokentype'), nullable=False),
+    sa.Column('type', sa.Enum('ACCESS', 'REFRESH', 'VERIFICATION', name='token_type'), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),

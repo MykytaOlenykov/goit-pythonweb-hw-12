@@ -7,7 +7,7 @@ from src.database.models import TokenType, UserStatus
 from src.services.users import UsersService
 from src.services.tokens import TokensService
 from src.services.mail import MailService, conf
-from src.schemas.auth import VerifyModel
+from src.schemas.auth import LoginModel, VerifyModel
 from src.schemas.users import UserCreateModel
 from src.schemas.tokens import BaseTokenPayloadCreateModel, BaseTokenPayloadModel
 from src.schemas.mail import VerificationMail
@@ -24,7 +24,6 @@ from src.utils.exceptions import (
 class AuthService:
 
     def __init__(self, db: AsyncSession):
-        self.db = db
         self.users_service = UsersService(db)
         self.tokens_service = TokensService(db)
         self.mail_service = MailService(conf)
@@ -33,7 +32,7 @@ class AuthService:
         user = await self.users_service.get_by_email_or_none(email=body.email)
 
         if user:
-            raise HTTPConflictException("A user with this email already exists")
+            raise HTTPConflictException("This email is already signed up")
 
         hashed_password = hash_secret(body.email)
         body.password = hashed_password
@@ -89,7 +88,7 @@ class AuthService:
         email = user.email
 
         if user is None:
-            raise HTTPNotFoundException("User with the specified email was not found")
+            raise HTTPNotFoundException("Invalid email")
 
         if user.status != UserStatus.REGISTERED:
             raise HTTPConflictException("User is already verified")

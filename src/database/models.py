@@ -11,9 +11,9 @@ class Base(DeclarativeBase):
 
 
 class UserStatus(str, Enum):
-    REGISTERED = "registered"
-    VERIFIED = "verified"
-    DELETED = "deleted"
+    REGISTERED = "REGISTERED"
+    VERIFIED = "VERIFIED"
+    DELETED = "DELETED"
 
 
 class User(Base):
@@ -25,7 +25,7 @@ class User(Base):
     avatar_url: Mapped[str] = mapped_column(String, nullable=True)
     password: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[UserStatus] = mapped_column(
-        SQLEnum(UserStatus),
+        SQLEnum(UserStatus, name="user_status"),
         default=UserStatus.REGISTERED,
         nullable=False,
     )
@@ -35,8 +35,9 @@ class User(Base):
 
 
 class TokenType(str, Enum):
-    REFRESH = "refresh"
-    VERIFICATION = "verification"
+    ACCESS = "ACCESS"
+    REFRESH = "REFRESH"
+    VERIFICATION = "VERIFICATION"
 
 
 class Token(Base):
@@ -44,7 +45,10 @@ class Token(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     token: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    type: Mapped[TokenType] = mapped_column(SQLEnum(TokenType), nullable=False)
+    type: Mapped[TokenType] = mapped_column(
+        SQLEnum(TokenType, name="token_type"),
+        nullable=False,
+    )
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),

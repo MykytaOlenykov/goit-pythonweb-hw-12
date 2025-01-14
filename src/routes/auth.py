@@ -3,8 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.auth import AuthService
-from src.schemas.auth import VerifyModel, ResponseSignupModel, ResponseVerifyModel
 from src.schemas.users import UserCreateModel
+from src.schemas.auth import (
+    LoginModel,
+    VerifyModel,
+    ResponseSignupModel,
+    ResponseLoginModel,
+    ResponseVerifyModel,
+)
 from src.utils.exceptions import (
     bad_request_response_docs,
     unauthorized_response_docs,
