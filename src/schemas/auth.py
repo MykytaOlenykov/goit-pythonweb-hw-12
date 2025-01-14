@@ -19,6 +19,10 @@ class ResponseLoginModel(BaseModel):
     token_type: str = Field(examples=["bearer"])
 
 
+class ResponseRefreshModel(ResponseLoginModel):
+    pass
+
+
 class ResponseCurrentUserModel(BaseModel):
     id: int = Field(examples=[1])
     username: str

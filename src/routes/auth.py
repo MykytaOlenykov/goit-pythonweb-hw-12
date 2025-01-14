@@ -11,6 +11,7 @@ from src.schemas.auth import (
     VerifyModel,
     ResponseSignupModel,
     ResponseLoginModel,
+    ResponseRefreshModel,
     ResponseCurrentUserModel,
     ResponseVerifyModel,
 )
@@ -80,6 +81,29 @@ async def logout(
     auth_service = AuthService(db)
     await auth_service.logout(refresh_token)
     response.delete_cookie("refresh_token", httponly=True, secure=True)
+
+
+@router.post(
+    "/refresh",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseRefreshModel,
+    responses={**unauthorized_response_docs},
+)
+async def refresh(
+    response: Response,
+    refresh_token: str | None = Cookie(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    auth_service = AuthService(db)
+    tokens = await auth_service.refresh(refresh_token)
+    response.set_cookie(
+        "refresh_token",
+        tokens.get("refresh_token"),
+        max_age=settings.JWT_REFRESH_EXPIRATION_SECONDS,
+        httponly=True,
+        secure=True,
+    )
+    return {"access_token": tokens.get("access_token"), "token_type": "bearer"}
 
 
 @router.get(

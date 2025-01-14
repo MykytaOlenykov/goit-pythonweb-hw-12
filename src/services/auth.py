@@ -74,6 +74,38 @@ class AuthService:
 
         return {"access_token": access_token, "refresh_token": refresh_token.token}
 
+    async def refresh(self, refresh_token: str | None):
+        if not refresh_token:
+            raise HTTPUnauthorizedException("Invalid refresh token")
+
+        payload = decode_jwt(token=refresh_token)
+        token = await self.tokens_service.get_token_or_none(refresh_token)
+
+        if not token:
+            raise HTTPUnauthorizedException("Invalid refresh token")
+
+        if not payload:
+            await self.tokens_service.delete_token(refresh_token)
+            raise HTTPUnauthorizedException("Invalid refresh token")
+
+        try:
+            verified_payload = BaseTokenPayloadModel(**payload)
+        except ValidationError:
+            await self.tokens_service.delete_token(refresh_token)
+            raise HTTPUnauthorizedException("Invalid refresh token")
+
+        new_payload = BaseTokenPayloadCreateModel(user_id=verified_payload.user_id)
+        new_access_token = self.tokens_service.generate_access_token(new_payload)
+        new_refresh_token = await self.tokens_service.create_refresh_token(new_payload)
+        data = {
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token.token,
+        }
+
+        await self.tokens_service.delete_token(refresh_token)
+
+        return data
+
     async def logout(self, refresh_token: str | None):
         if not refresh_token:
             raise HTTPUnauthorizedException("Invalid refresh token")
@@ -86,7 +118,10 @@ class AuthService:
         await self.tokens_service.delete_token(refresh_token)
 
     async def verify_user(self, token: str):
-        payload = decode_jwt(token=token) or {}
+        payload = decode_jwt(token=token)
+
+        if not payload:
+            raise HTTPUnauthorizedException("Invalid token")
 
         try:
             verified_payload = BaseTokenPayloadModel(**payload)
