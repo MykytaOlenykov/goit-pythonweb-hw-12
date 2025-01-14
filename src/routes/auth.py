@@ -72,7 +72,7 @@ async def login(
 )
 async def logout(
     response: Response,
-    refresh_token: str = Cookie(),
+    refresh_token: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     auth_service = AuthService(db)
