@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.auth import AuthService
+from src.services.tokens import TokensService
 from src.schemas.users import UserCreateModel
 from src.settings import settings
 from src.schemas.auth import (
@@ -52,15 +53,15 @@ async def create_contact(
     db: AsyncSession = Depends(get_db),
 ):
     auth_service = AuthService(db)
-    access_token, refresh_token = await auth_service.login(body)
+    tokens = await auth_service.login(body)
     response.set_cookie(
         "refresh_token",
-        refresh_token,
+        tokens.get("refresh_token"),
         max_age=settings.JWT_REFRESH_EXPIRATION_SECONDS,
         httponly=True,
         secure=True,
     )
-    return {"access_token": access_token}
+    return {"access_token": tokens.get("access_token")}
 
 
 @router.get(
