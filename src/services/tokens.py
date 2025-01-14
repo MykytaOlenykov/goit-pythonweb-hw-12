@@ -30,9 +30,12 @@ class TokensService:
 
         return await self.tokens_repository.get_all(filters=filters)
 
-    async def get_token_or_fail(self, token: str):
+    async def get_token_or_none(self, token: str):
         filters = [Token.token == token]
-        token = await self.tokens_repository.get_one_or_none(filters=filters)
+        return await self.tokens_repository.get_one_or_none(filters=filters)
+
+    async def get_token_or_fail(self, token: str):
+        token = await self.get_token_or_none(token)
 
         if token is None:
             raise HTTPNotFoundException("Token not found")

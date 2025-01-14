@@ -74,6 +74,14 @@ class AuthService:
 
         return {"access_token": access_token, "refresh_token": refresh_token.token}
 
+    async def logout(self, refresh_token: str):
+        token = await self.tokens_service.get_token_or_fail(refresh_token)
+
+        if not token:
+            raise HTTPUnauthorizedException("Invalid token")
+
+        await self.tokens_service.delete_token(refresh_token)
+
     async def verify_user(self, token: str):
         payload = decode_jwt(token=token) or {}
 

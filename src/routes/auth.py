@@ -1,10 +1,10 @@
-from fastapi import Response, BackgroundTasks, APIRouter, Depends, status
+from fastapi import Response, BackgroundTasks, APIRouter, Depends, Cookie, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.auth import AuthService
-from src.schemas.users import UserCreateModel
 from src.settings import settings
+from src.schemas.users import UserCreateModel
 from src.schemas.auth import (
     LoginModel,
     VerifyModel,
@@ -12,6 +12,7 @@ from src.schemas.auth import (
     ResponseLoginModel,
     ResponseVerifyModel,
 )
+from src.utils.authenticate import authenticate
 from src.utils.exceptions import (
     bad_request_response_docs,
     unauthorized_response_docs,
@@ -61,6 +62,22 @@ async def login(
         secure=True,
     )
     return {"access_token": tokens.get("access_token"), "token_type": "bearer"}
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(authenticate)],
+    responses={**unauthorized_response_docs},
+)
+async def logout(
+    response: Response,
+    refresh_token: str = Cookie(),
+    db: AsyncSession = Depends(get_db),
+):
+    auth_service = AuthService(db)
+    await auth_service.logout(refresh_token)
+    response.delete_cookie("refresh_token", httponly=True, secure=True)
 
 
 @router.get(
