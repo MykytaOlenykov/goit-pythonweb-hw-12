@@ -11,7 +11,7 @@ from src.schemas.auth import LoginModel, VerifyModel
 from src.schemas.users import UserCreateModel
 from src.schemas.tokens import BaseTokenPayloadCreateModel, BaseTokenPayloadModel
 from src.schemas.mail import VerificationMail
-from src.utils.hashing import hash_secret
+from src.utils.hashing import hash_secret, verify_secret
 from src.utils.tokens import decode_jwt
 from src.settings import settings
 from src.utils.exceptions import (
@@ -34,7 +34,7 @@ class AuthService:
         if user:
             raise HTTPConflictException("This email is already signed up")
 
-        hashed_password = hash_secret(body.email)
+        hashed_password = hash_secret(body.password)
         body.password = hashed_password
 
         created_user = await self.users_service.create(body)
@@ -49,6 +49,29 @@ class AuthService:
             username=body.username,
         )
         self.mail_service.send_verification_mail(background_tasks, mail_body)
+
+    async def login(self, body: LoginModel):
+        user = await self.users_service.get_by_email_or_none(email=body.email)
+
+        if user is None:
+            raise HTTPUnauthorizedException("Invalid email or password")
+
+        if user.status == UserStatus.REGISTERED:
+            raise HTTPUnauthorizedException("User needs to verify their account")
+
+        if user.status == UserStatus.DELETED:
+            raise HTTPUnauthorizedException("User account is deleted")
+
+        password_verified = verify_secret(body.password, user.password)
+
+        if not password_verified:
+            raise HTTPUnauthorizedException("Invalid email or password")
+
+        payload = BaseTokenPayloadCreateModel(user_id=user.id)
+        access_token = self.tokens_service.generate_access_token(payload)
+        refresh_token = await self.tokens_service.create_refresh_token(payload)
+
+        return {"access_token": access_token, "refresh_token": refresh_token.token}
 
     async def verify_user(self, token: str):
         payload = decode_jwt(token=token)

@@ -1,9 +1,10 @@
-from fastapi import BackgroundTasks, APIRouter, Depends, status
+from fastapi import Response, BackgroundTasks, APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.services.auth import AuthService
 from src.schemas.users import UserCreateModel
+from src.settings import settings
 from src.schemas.auth import (
     LoginModel,
     VerifyModel,
@@ -37,6 +38,29 @@ async def create_contact(
     return {
         "message": "Registration successful. Please check your email to activate your account."
     }
+
+
+@router.post(
+    "/login",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseLoginModel,
+    responses={**bad_request_response_docs, **unauthorized_response_docs},
+)
+async def create_contact(
+    response: Response,
+    body: LoginModel,
+    db: AsyncSession = Depends(get_db),
+):
+    auth_service = AuthService(db)
+    access_token, refresh_token = await auth_service.login(body)
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        max_age=settings.JWT_REFRESH_EXPIRATION_SECONDS,
+        httponly=True,
+        secure=True,
+    )
+    return {"access_token": access_token}
 
 
 @router.get(

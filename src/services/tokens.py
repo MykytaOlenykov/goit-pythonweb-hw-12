@@ -49,3 +49,29 @@ class TokensService:
             user_id=payload.user_id,
         )
         return await self.create(body)
+
+    async def create_refresh_token(self, payload: BaseTokenPayloadCreateModel):
+        data = {
+            **payload.model_dump(),
+            "token_type": TokenType.REFRESH,
+        }
+        jwt = create_jwt(
+            data=data,
+            expire_time_seconds=settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
+        )
+        body = TokenCreateModel(
+            token=jwt,
+            type=TokenType.REFRESH,
+            user_id=payload.user_id,
+        )
+        return await self.create(body)
+
+    def generate_access_token(self, payload: BaseTokenPayloadCreateModel):
+        data = {
+            **payload.model_dump(),
+            "token_type": TokenType.ACCESS,
+        }
+        return create_jwt(
+            data=data,
+            expire_time_seconds=settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
+        )
