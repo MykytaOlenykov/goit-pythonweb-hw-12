@@ -69,7 +69,7 @@ class HTTPConflictException(HTTPException):
     def __init__(self, detail: str | None = None) -> None:
         super().__init__(
             status_code=status.HTTP_409_CONFLICT,
-            detail=detail or "Not found",
+            detail=detail or "Conflict",
         )
 
 
@@ -82,5 +82,26 @@ conflict_response_docs = {
     409: {
         "model": ConflictModel,
         "description": "Conflict",
+    },
+}
+
+
+class HTTPTooManyRequestsException(HTTPException):
+    def __init__(self, detail: str | None = None) -> None:
+        super().__init__(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=detail or "Too Many Requests",
+        )
+
+
+class TooManyRequestsModel(BaseModel):
+    detail: str
+    status_code: int = 429
+
+
+too_many_requests_response_docs = {
+    429: {
+        "model": TooManyRequestsModel,
+        "description": "Too Many Requests",
     },
 }

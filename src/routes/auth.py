@@ -1,5 +1,15 @@
-from fastapi import Response, BackgroundTasks, APIRouter, Depends, Cookie, status
+from fastapi import (
+    Request,
+    Response,
+    BackgroundTasks,
+    APIRouter,
+    Depends,
+    Cookie,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.database.db import get_db
 from src.database.models import User
@@ -21,9 +31,12 @@ from src.utils.exceptions import (
     unauthorized_response_docs,
     not_found_response_docs,
     conflict_response_docs,
+    too_many_requests_response_docs,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post(
@@ -110,9 +123,10 @@ async def refresh(
     "/me",
     status_code=status.HTTP_200_OK,
     response_model=ResponseCurrentUserModel,
-    responses={**unauthorized_response_docs},
+    responses={**unauthorized_response_docs, **too_many_requests_response_docs},
 )
-async def me(user: User = Depends(authenticate)):
+@limiter.limit("5/minute")
+async def me(request: Request, user: User = Depends(authenticate)):
     return {
         "id": user.id,
         "username": user.username,
