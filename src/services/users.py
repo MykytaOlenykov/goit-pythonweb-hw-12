@@ -15,9 +15,12 @@ class UsersService:
         filters = [User.email == email]
         return await self.users_repository.get_one_or_none(filters=filters)
 
-    async def get_by_id_or_fail(self, id: int):
+    async def get_by_id_or_none(self, id: int):
         filters = [User.id == id]
-        user = await self.users_repository.get_one_or_none(filters=filters)
+        return await self.users_repository.get_one_or_none(filters=filters)
+
+    async def get_by_id_or_fail(self, id: int):
+        user = await self.get_by_id_or_none(id)
 
         if user is None:
             raise HTTPNotFoundException("User not found")

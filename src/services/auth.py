@@ -2,6 +2,7 @@ from urllib.parse import urljoin
 
 from fastapi import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
 
 from src.database.models import TokenType, UserStatus
 from src.services.users import UsersService
@@ -74,11 +75,11 @@ class AuthService:
         return {"access_token": access_token, "refresh_token": refresh_token.token}
 
     async def verify_user(self, token: str):
-        payload = decode_jwt(token=token)
+        payload = decode_jwt(token=token) or {}
 
         try:
             verified_payload = BaseTokenPayloadModel(**payload)
-        except Exception:
+        except ValidationError:
             raise HTTPUnauthorizedException("Invalid token")
 
         if verified_payload.token_type != TokenType.VERIFICATION:
