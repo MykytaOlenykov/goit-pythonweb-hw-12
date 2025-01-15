@@ -4,18 +4,28 @@ from fastapi import APIRouter, Query, Depends, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
+from src.database.models import User
 from src.services.contacts import ContactsService
 from src.schemas.contacts import (
     ContactCreateModel,
     ContactUpdateModel,
     ResponseContactModel,
 )
-from src.utils.exceptions import bad_request_response_docs, not_found_response_docs
+from src.utils.authenticate import authenticate
+from src.utils.exceptions import (
+    bad_request_response_docs,
+    not_found_response_docs,
+    unauthorized_response_docs,
+)
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 
 
-@router.get("/", response_model=List[ResponseContactModel])
+@router.get(
+    "/",
+    response_model=List[ResponseContactModel],
+    responses={**unauthorized_response_docs},
+)
 async def get_contacts(
     search: str | None = Query(
         default=None, description="Search by first_name, last_name and email"
@@ -24,10 +34,12 @@ async def get_contacts(
         default=None,
         description="Filter contacts with birthdays within the given number of days",
     ),
+    user: User = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
     return await contacts_service.get_all(
+        user=user,
         search=search,
         birthdays_within=birthdays_within,
     )
@@ -36,28 +48,30 @@ async def get_contacts(
 @router.get(
     "/{id}",
     response_model=ResponseContactModel,
-    responses={**not_found_response_docs},
+    responses={**not_found_response_docs, **unauthorized_response_docs},
 )
 async def get_contact_by_id(
     id: int,
+    user: User = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
-    return await contacts_service.get_by_id(id)
+    return await contacts_service.get_by_id(user=user, id=id)
 
 
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
     response_model=ResponseContactModel,
-    responses={**bad_request_response_docs},
+    responses={**bad_request_response_docs, **unauthorized_response_docs},
 )
 async def create_contact(
     body: ContactCreateModel,
+    user: User = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
-    return await contacts_service.create(body)
+    return await contacts_service.create(user=user, body=body)
 
 
 @router.put(
@@ -66,26 +80,29 @@ async def create_contact(
     responses={
         **bad_request_response_docs,
         **not_found_response_docs,
+        **unauthorized_response_docs,
     },
 )
 async def update_contact_by_id(
     body: ContactUpdateModel,
     id: int,
+    user: User = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
-    return await contacts_service.update_by_id(body, id)
+    return await contacts_service.update_by_id(user=user, body=body, id=id)
 
 
 @router.delete(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={**not_found_response_docs},
+    responses={**not_found_response_docs, **unauthorized_response_docs},
 )
 async def delete_contact_by_id(
     id: int,
+    user: User = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
-    await contacts_service.delete_by_id(id)
+    await contacts_service.delete_by_id(user=user, id=id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

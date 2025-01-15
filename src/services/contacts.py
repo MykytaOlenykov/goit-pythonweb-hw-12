@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from sqlalchemy import or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.database.models import User
 from src.repository.contacts import ContactsRepository
 from src.database.models import Contact
 from src.schemas.contacts import ContactCreateModel, ContactUpdateModel
@@ -16,12 +17,13 @@ class ContactsService:
 
     async def get_all(
         self,
+        user: User,
         search: str | None = None,
         birthdays_within: int | None = None,
         offset: int | None = None,
         limit: int | None = None,
     ):
-        filters = []
+        filters = [Contact.user == user]
 
         if search is not None:
             filters.append(
@@ -51,8 +53,8 @@ class ContactsService:
             limit=limit,
         )
 
-    async def get_by_id(self, id: int):
-        filters = [Contact.id == id]
+    async def get_by_id(self, user: User, id: int):
+        filters = [Contact.id == id, Contact.user == user]
         contact = await self.contacts_repository.get_one_or_none(filters=filters)
 
         if contact is None:
@@ -60,13 +62,13 @@ class ContactsService:
 
         return contact
 
-    async def create(self, body: ContactCreateModel):
-        return await self.contacts_repository.create(body)
+    async def create(self, user: User, body: ContactCreateModel):
+        return await self.contacts_repository.create(user_id=user.id, body=body)
 
-    async def update_by_id(self, body: ContactUpdateModel, id: int):
-        await self.get_by_id(id)
+    async def update_by_id(self, user: User, body: ContactUpdateModel, id: int):
+        await self.get_by_id(user=user, id=id)
         return await self.contacts_repository.update(body=body, contact_id=id)
 
-    async def delete_by_id(self, id: int):
-        contact = await self.get_by_id(id)
+    async def delete_by_id(self, user: User, id: int):
+        contact = await self.get_by_id(user=user, id=id)
         return await self.contacts_repository.delete(contact)

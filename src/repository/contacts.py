@@ -40,8 +40,8 @@ class ContactsRepository:
             await self.db.execute(select(Contact).filter(*filters).order_by(order_by))
         ).scalar_one_or_none()
 
-    async def create(self, body: ContactCreateModel):
-        contact = Contact(**body.model_dump())
+    async def create(self, user_id: int, body: ContactCreateModel):
+        contact = Contact(**body.model_dump(), user_id=user_id)
         self.db.add(contact)
         await self.db.commit()
         await self.db.refresh(contact)
