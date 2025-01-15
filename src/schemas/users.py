@@ -11,3 +11,11 @@ class UserCreateModel(BaseModel):
 
 class UserStatusUpdateModel(BaseModel):
     status: UserStatus
+
+
+class UserAvatarUpdateModel(BaseModel):
+    avatar_url: str
+
+
+class ResponseAvatarModel(BaseModel):
+    avatar_url: str

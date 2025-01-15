@@ -28,5 +28,9 @@ class Settings(BaseSettings):
     MAIL_FROM_NAME: str
     MAIL_PORT: int = 465
 
+    CLOUDINARY_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
+
 
 settings = Settings()

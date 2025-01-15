@@ -6,11 +6,12 @@ from pydantic import ValidationError
 from slowapi.errors import RateLimitExceeded
 
 from src.routes.auth import router as auth_router
+from src.routes.users import router as users_router
 from src.routes.contacts import router as contacts_router
 from src.settings import settings
 
 
-ROUTERS = [auth_router, contacts_router]
+ROUTERS = [auth_router, users_router, contacts_router]
 
 app = FastAPI()
 
