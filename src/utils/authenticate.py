@@ -1,4 +1,5 @@
 from fastapi import Depends, Header, HTTPException, status
+from fastapi.security.utils import get_authorization_scheme_param
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
 
@@ -9,7 +10,7 @@ from src.utils.tokens import decode_jwt
 
 
 async def authenticate(
-    authorization: str = Header(default=""),
+    authorization: str | None = Header(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     credentials_exception = HTTPException(
@@ -18,14 +19,12 @@ async def authenticate(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    credentials = authorization.split(" ")
+    scheme, token = get_authorization_scheme_param(authorization)
 
-    if len(credentials) != 2:
+    if not (authorization and scheme and token):
         raise credentials_exception
 
-    bearer, token = credentials
-
-    if bearer != "Bearer" or not token:
+    if scheme != "Bearer" or not token:
         raise credentials_exception
 
     try:
