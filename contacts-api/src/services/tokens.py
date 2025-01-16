@@ -75,7 +75,7 @@ class TokensService:
         }
         jwt = create_jwt(
             data=data,
-            expire_time_seconds=settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
+            expire_time_seconds=settings.JWT_REFRESH_EXPIRATION_SECONDS,
         )
         body = TokenCreateModel(
             token=jwt,
@@ -91,5 +91,5 @@ class TokensService:
         }
         return create_jwt(
             data=data,
-            expire_time_seconds=settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
+            expire_time_seconds=settings.JWT_ACCESS_EXPIRATION_SECONDS,
         )

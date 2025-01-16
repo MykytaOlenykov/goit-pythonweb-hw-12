@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     )
 
     PORT: int = 8000
-    HOST: str = "localhost"
-    BASE_URL: str = "http://localhost:8000"
+    HOST: str = "0.0.0.0"
+    BASE_URL: str = "http://0.0.0.0:8000"
     DB_URL: str
     ECHO_SQL: bool = False
     CORS_ORIGINS: str = "*"
