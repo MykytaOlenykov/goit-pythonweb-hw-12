@@ -66,6 +66,32 @@ The API will be available at http://localhost:8000
 
 API Documentation: Visit http://localhost:8000/docs for interactive API documentation powered by Swagger UI.
 
+### 6. Creating and Applying Database Migrations
+
+#### 6.1. Access the Application Container
+
+To execute Alembic commands, first, enter the application container:
+
+```bash
+docker exec -it contacts_api bash
+```
+
+#### 6.2. Create a New Migration
+
+Inside the container, run the following command to generate a new migration based on your updated models:
+
+```bash
+alembic revision --autogenerate -m "Describe your migration"
+```
+
+#### 6.3. Apply the Migrations
+
+Apply the generated migrations to the database using:
+
+```bash
+alembic upgrade head
+```
+
 ## Environment Variables
 
 | Variable                              | Description                                                                                 |
