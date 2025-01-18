@@ -9,6 +9,12 @@ services:
       - "5432:5432"
     expose:
       - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 5
+      start_period: 1s
     env_file:
       - .env
     networks:
@@ -29,11 +35,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - db_pythonweb
+      db_pythonweb:
+        condition: service_healthy
     networks:
       - pythonweb_networks
     volumes:
-      - ./src:/app/src
+      - ./src:/app/src:rw
 
 networks:
   pythonweb_networks:

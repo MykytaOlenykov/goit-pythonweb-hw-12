@@ -14,4 +14,4 @@ RUN poetry install --only=main --no-root
 
 EXPOSE 8000
 
-CMD ["poetry", "run", "python", "src/main.py"]
+CMD ["sh", "-c", "alembic upgrade head && poetry run python src/main.py"]
