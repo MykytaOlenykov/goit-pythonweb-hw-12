@@ -10,7 +10,7 @@ services:
     expose:
       - "5432"
     env_file:
-      - ./contacts-api/.env
+      - .env
     networks:
       - pythonweb_networks
     volumes:
@@ -27,13 +27,13 @@ services:
     expose:
       - "8000"
     env_file:
-      - ./contacts-api/.env
+      - .env
     depends_on:
       - db_pythonweb
     networks:
       - pythonweb_networks
     volumes:
-      - ./contacts-api:/app/contacts-api
+      - ./src:/app/src
 
 networks:
   pythonweb_networks:

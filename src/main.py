@@ -12,7 +12,6 @@ from src.settings import settings
 
 
 ROUTERS = [auth_router, users_router, contacts_router]
-
 app = FastAPI()
 
 

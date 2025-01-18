@@ -4,7 +4,9 @@ WORKDIR /app
 
 RUN pip install poetry
 
-COPY ./contacts-api ./contacts-api
+ENV PYTHONPATH=/app
+
+COPY ./src ./src
 COPY pyproject.toml poetry.lock alembic.ini ./
 
 RUN poetry config virtualenvs.create false 
@@ -12,4 +14,4 @@ RUN poetry install --only=main --no-root
 
 EXPOSE 8000
 
-CMD ["poetry", "run", "python", "contacts-api/main.py"]
+CMD ["poetry", "run", "python", "src/main.py"]
