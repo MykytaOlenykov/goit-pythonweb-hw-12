@@ -36,7 +36,7 @@ git clone https://github.com/MykytaOlenykov/goit-pythonweb-hw-10.git
 cd goit-pythonweb-hw-10
 ```
 
-### 2. Install dependencies:
+### 2. Install dependencies (Optional):
 
 ```bash
 poetry install
