@@ -17,14 +17,14 @@ async def authenticate(
     Function to authenticate the user based on a JWT token.
 
     Args:
-        authorization (str | None): The Authorization header containing the JWT token.
-        db (AsyncSession): The database session to fetch user information.
+        - authorization (str | None): The Authorization header containing the JWT token.
+        - db (AsyncSession): The database session to fetch user information.
 
     Returns:
-        User object if authentication is successful.
+        - User object if authentication is successful.
 
     Raises:
-        HTTPException: If the token is invalid or the user is not found.
+        - HTTPException: If the token is invalid or the user is not found.
 
     Steps:
         1. Extracts the JWT token from the `Authorization` header.

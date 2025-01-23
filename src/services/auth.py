@@ -23,6 +23,20 @@ from src.utils.exceptions import (
 
 
 class AuthService:
+    """
+    AuthService handles user authentication, registration, and token management.
+
+    Args:
+        - db: AsyncSession instance for database interaction.
+
+    Methods:
+        - signup: Registers a new user and sends a verification email.
+        - login: Authenticates a user and generates access and refresh tokens.
+        - refresh: Refreshes an expired access token using a refresh token.
+        - logout: Logs out a user by invalidating the refresh token.
+        - verify_user: Verifies a user's email using the provided verification token.
+        - resend_verification_email: Resends the verification email to the user if the account is not verified.
+    """
 
     def __init__(self, db: AsyncSession):
         self.users_service = UsersService(db)
@@ -30,6 +44,17 @@ class AuthService:
         self.mail_service = MailService(conf)
 
     async def signup(self, background_tasks: BackgroundTasks, body: UserCreateModel):
+        """
+        Handles user signup by creating a new user, hashing the password, and sending a verification email.
+
+        Args:
+            - background_tasks: BackgroundTasks instance for background operations.
+            - body: UserCreateModel containing the user's signup information.
+
+        Raises:
+            - HTTPConflictException: If the email is already registered.
+        """
+
         user = await self.users_service.get_by_email_or_none(email=body.email)
 
         if user:
@@ -52,6 +77,19 @@ class AuthService:
         self.mail_service.send_verification_mail(background_tasks, mail_body)
 
     async def login(self, body: LoginModel):
+        """
+        Authenticates the user with the provided email and password.
+
+        Args:
+            - body: LoginModel containing the user's email and password.
+
+        Returns:
+            - Dictionary containing the access and refresh tokens.
+
+        Raises:
+            - HTTPUnauthorizedException: If the credentials are invalid or the account is not verified.
+        """
+
         user = await self.users_service.get_by_email_or_none(email=body.email)
 
         if user is None:
@@ -75,6 +113,19 @@ class AuthService:
         return {"access_token": access_token, "refresh_token": refresh_token.token}
 
     async def refresh(self, refresh_token: str | None):
+        """
+        Refreshes the access token using a valid refresh token.
+
+        Args:
+            - refresh_token: str - The refresh token to be used for generating a new access token.
+
+        Returns:
+            - Dictionary containing the new access and refresh tokens.
+
+        Raises:
+            - HTTPUnauthorizedException: If the refresh token is invalid or expired.
+        """
+
         if not refresh_token:
             raise HTTPUnauthorizedException("Invalid refresh token")
 
@@ -107,6 +158,16 @@ class AuthService:
         return data
 
     async def logout(self, refresh_token: str | None):
+        """
+        Logs out the user by invalidating the refresh token.
+
+        Args:
+            - refresh_token: str - The refresh token to be invalidated.
+
+        Raises:
+            - HTTPUnauthorizedException: If the refresh token is invalid or not provided.
+        """
+
         if not refresh_token:
             raise HTTPUnauthorizedException("Invalid refresh token")
 
@@ -118,6 +179,17 @@ class AuthService:
         await self.tokens_service.delete_token(refresh_token)
 
     async def verify_user(self, token: str):
+        """
+        Verifies a user's email using the provided verification token.
+
+        Args:
+            - token: str - The verification token.
+
+        Raises:
+            - HTTPUnauthorizedException: If the token is invalid or expired.
+            - HTTPConflictException: If the user's email is already verified.
+        """
+
         payload = decode_jwt(token=token)
 
         if not payload:
@@ -152,6 +224,18 @@ class AuthService:
         background_tasks: BackgroundTasks,
         body: VerifyModel,
     ):
+        """
+        Resends the verification email to a user if the account is not verified.
+
+        Args:
+            - background_tasks: BackgroundTasks - BackgroundTasks instance for background operations.
+            - body: VerifyModel - Contains the email to resend the verification to.
+
+        Raises:
+            - HTTPNotFoundException: If the email is not registered.
+            - HTTPConflictException: If the user is already verified.
+        """
+
         user = await self.users_service.get_by_email_or_none(body.email)
         user_id = user.id
         username = user.username

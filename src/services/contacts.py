@@ -11,6 +11,19 @@ from src.utils.exceptions import HTTPNotFoundException
 
 
 class ContactsService:
+    """
+    ContactsService provides functionalities to manage user contacts.
+
+    Args:
+        - db: AsyncSession instance for database interaction.
+
+    Methods:
+        - get_all: Retrieves all contacts for a user with optional search and filtering.
+        - get_by_id: Retrieves a specific contact by ID and user.
+        - create: Creates a new contact for the user.
+        - update_by_id: Updates an existing contact by ID.
+        - delete_by_id: Deletes a contact by ID.
+    """
 
     def __init__(self, db: AsyncSession):
         self.contacts_repository = ContactsRepository(db)
@@ -23,6 +36,21 @@ class ContactsService:
         offset: int | None = None,
         limit: int | None = None,
     ):
+        """
+        Retrieves all contacts for a specific user with optional search and filtering by name or email,
+        and filtering by upcoming birthdays.
+
+        Args:
+            - user: User - The user whose contacts need to be fetched.
+            - search: str | None - Optional search string for filtering contacts by name or email.
+            - birthdays_within: int | None - Optional number of days to filter contacts by upcoming birthdays.
+            - offset: int | None - Optional offset for pagination.
+            - limit: int | None - Optional limit for pagination.
+
+        Returns:
+            - List of Contact objects that match the search and filter criteria.
+        """
+
         filters = [Contact.user == user]
 
         if search is not None:
@@ -54,6 +82,20 @@ class ContactsService:
         )
 
     async def get_by_id(self, user: User, id: int):
+        """
+        Retrieves a contact by its ID and associated user.
+
+        Args:
+            - user: User - The user to whom the contact belongs.
+            - id: int - The ID of the contact.
+
+        Returns:
+            - Contact object if found.
+
+        Raises:
+            - HTTPNotFoundException: If the contact with the specified ID is not found.
+        """
+
         filters = [Contact.id == id, Contact.user == user]
         contact = await self.contacts_repository.get_one_or_none(filters=filters)
 
@@ -63,12 +105,52 @@ class ContactsService:
         return contact
 
     async def create(self, user: User, body: ContactCreateModel):
+        """
+        Creates a new contact for the specified user.
+
+        Args:
+            - user: User - The user to whom the contact will be added.
+            - body: ContactCreateModel - Contains information for the new contact.
+
+        Returns:
+            - Created Contact object.
+        """
+
         return await self.contacts_repository.create(user_id=user.id, body=body)
 
     async def update_by_id(self, user: User, body: ContactUpdateModel, id: int):
+        """
+        Updates an existing contact identified by ID.
+
+        Args:
+            - user: User - The user to whom the contact belongs.
+            - body: ContactUpdateModel - Contains updated information for the contact.
+            - id: int - The ID of the contact to be updated.
+
+        Returns:
+            - Updated Contact object.
+
+        Raises:
+            - HTTPNotFoundException: If the contact with the specified ID is not found.
+        """
+
         await self.get_by_id(user=user, id=id)
         return await self.contacts_repository.update(body=body, contact_id=id)
 
     async def delete_by_id(self, user: User, id: int):
+        """
+        Deletes a contact identified by ID for the specified user.
+
+        Args:
+            - user: User - The user to whom the contact belongs.
+            - id: int - The ID of the contact to be deleted.
+
+        Returns:
+            - Boolean indicating successful deletion.
+
+        Raises:
+            - HTTPNotFoundException: If the contact with the specified ID is not found.
+        """
+
         contact = await self.get_by_id(user=user, id=id)
         return await self.contacts_repository.delete(contact)

@@ -23,10 +23,27 @@ conf = ConnectionConfig(
 
 
 class MailTemplates(str, Enum):
+    """
+    Enum for different mail templates.
+
+    Attributes:
+        - VERIFICATION: Template used for verification emails.
+    """
+
     VERIFICATION = "verification-mail.html"
 
 
 class MailService:
+    """
+    MailService handles sending emails.
+
+    Args:
+        - config: ConnectionConfig - Configuration object for sending emails.
+
+    Methods:
+        - send_mail: Sends an email using FastMail.
+        - send_verification_mail: Sends a verification email to the user.
+    """
 
     def __init__(self, config: ConnectionConfig):
         self.config = config
@@ -40,6 +57,18 @@ class MailService:
         template_body: dict,
         template_name: MailTemplates,
     ):
+        """
+        Sends an email using FastMail.
+
+        Args:
+            - background_tasks: BackgroundTasks - Background task to handle sending.
+            - subject: str - The subject of the email.
+            - recipients: list[str] - List of recipients.
+            - template_body: dict - The content of the email template.
+            - template_name: MailTemplates - The template used to generate the email.
+
+        """
+
         message = MessageSchema(
             subject=subject,
             recipients=recipients,
@@ -57,6 +86,15 @@ class MailService:
         background_tasks: BackgroundTasks,
         body: VerificationMail,
     ):
+        """
+        Sends a verification email to the user.
+
+        Args:
+            - background_tasks: BackgroundTasks - Background task to handle sending.
+            - body: VerificationMail - The data to populate the email template.
+
+        """
+
         self.send_mail(
             background_tasks=background_tasks,
             subject="Activate your account",

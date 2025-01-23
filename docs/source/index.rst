@@ -15,6 +15,51 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
+Services
+==========================
+
+Auth
+--------------------------
+.. automodule:: src.services.auth
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+Tokens
+--------------------------
+.. automodule:: src.services.tokens
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+Users
+--------------------------
+.. automodule:: src.services.users
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+Contacts
+--------------------------
+.. automodule:: src.services.contacts
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+Mail
+--------------------------
+.. automodule:: src.services.mail
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+Upload File
+--------------------------
+.. automodule:: src.services.upload_file
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
 Utils
 ==========================
 
