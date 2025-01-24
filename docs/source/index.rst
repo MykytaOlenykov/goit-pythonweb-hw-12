@@ -60,6 +60,30 @@ Upload File
   :undoc-members:
   :show-inheritance:
 
+Repository
+==========================
+
+Tokens
+--------------------------
+.. automodule:: src.repository.tokens
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+Users
+--------------------------
+.. automodule:: src.repository.users
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+Contacts
+--------------------------
+.. automodule:: src.repository.contacts
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
 Utils
 ==========================
 
