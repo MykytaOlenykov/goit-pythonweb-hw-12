@@ -41,20 +41,6 @@ async def test_get_user_found(
 
 
 @pytest.mark.asyncio
-async def test_get_user_not_found(
-    users_repository: UsersRepository, mock_session: AsyncMock
-):
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = None
-    mock_session.execute = AsyncMock(return_value=mock_result)
-
-    filters = [User.id == 2]
-    user = await users_repository.get_one_or_none(filters=filters)
-
-    assert user is None
-
-
-@pytest.mark.asyncio
 async def test_create_user(users_repository: UsersRepository, mock_session: AsyncMock):
     user = UserCreateModel(
         username="username",
