@@ -29,12 +29,24 @@ def user():
     )
 
 
+@pytest.fixture
+def existing_token(user: User):
+    return Token(
+        id=1,
+        token="token1",
+        type=TokenType.REFRESH,
+        user_id=user.id,
+    )
+
+
 @pytest.mark.asyncio
-async def test_get_tokens(tokens_repository: TokensRepository, mock_session: AsyncMock):
+async def test_get_tokens(
+    tokens_repository: TokensRepository,
+    mock_session: AsyncMock,
+    existing_token: Token,
+):
     mock_result = MagicMock()
-    mock_result.scalars.return_value.all.return_value = [
-        Token(id=1, token="token1", type=TokenType.REFRESH, user_id=1),
-    ]
+    mock_result.scalars.return_value.all.return_value = [existing_token]
     mock_session.execute = AsyncMock(return_value=mock_result)
 
     tokens = await tokens_repository.get_all(offset=0, limit=10)
@@ -44,22 +56,21 @@ async def test_get_tokens(tokens_repository: TokensRepository, mock_session: Asy
 
 
 @pytest.mark.asyncio
-async def test_get_token_found(
+async def test_get_token(
     tokens_repository: TokensRepository,
     mock_session: AsyncMock,
     user: User,
+    existing_token: Token,
 ):
     mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = Token(
-        id=1, token="token1", type=TokenType.REFRESH, user_id=1
-    )
+    mock_result.scalar_one_or_none.return_value = existing_token
     mock_session.execute = AsyncMock(return_value=mock_result)
 
-    filters = [Token.id == 1, Token.user == user]
+    filters = [Token.id == existing_token.id, Token.user == user]
     token = await tokens_repository.get_one_or_none(filters=filters)
 
     assert token is not None
-    assert token.id == 1
+    assert token.id == existing_token.id
     assert token.type == TokenType.REFRESH
 
 
@@ -84,8 +95,8 @@ async def test_create_token(
 async def test_delete_token(
     tokens_repository: TokensRepository,
     mock_session: AsyncMock,
+    existing_token: Token,
 ):
-    existing_token = Token(id=1, token="token1", type=TokenType.REFRESH, user_id=1)
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = existing_token
     mock_session.execute = AsyncMock(return_value=mock_result)
@@ -93,7 +104,7 @@ async def test_delete_token(
     result = await tokens_repository.delete(token=existing_token)
 
     assert result is not None
-    assert result.id == 1
+    assert result.id == existing_token.id
     mock_session.delete.assert_awaited_once_with(existing_token)
     mock_session.commit.assert_awaited_once()
 
@@ -105,11 +116,11 @@ async def test_delete_many_tokens(
 ):
     existing_tokens = ["token1", "token2"]
     mock_result = MagicMock()
-    mock_result.rowcount = 2
+    mock_result.rowcount = len(existing_tokens)
     mock_session.execute = AsyncMock(return_value=mock_result)
 
     result = await tokens_repository.delete_many(tokens=existing_tokens)
 
-    assert result == 2
+    assert result == len(existing_tokens)
     mock_session.execute.assert_called_once()
     mock_session.commit.assert_awaited_once()

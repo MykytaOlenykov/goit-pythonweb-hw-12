@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Contact
-from src.schemas.contacts import ContactCreateModel
+from src.schemas.contacts import ContactCreateModel, ContactUpdateModel
 
 
 class ContactsRepository:
@@ -96,7 +96,7 @@ class ContactsRepository:
         await self.db.refresh(contact)
         return contact
 
-    async def update(self, contact_id: int, body: ContactCreateModel):
+    async def update(self, contact_id: int, body: ContactUpdateModel):
         """
         Updates an existing contact by its ID.
 

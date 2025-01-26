@@ -18,25 +18,32 @@ def users_repository(mock_session):
     return UsersRepository(mock_session)
 
 
-@pytest.mark.asyncio
-async def test_get_user_found(
-    users_repository: UsersRepository, mock_session: AsyncMock
-):
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = User(
+@pytest.fixture
+def existing_user():
+    return User(
         id=1,
         username="username",
         email="email@gmail.com",
         avatar_url=None,
         status=UserStatus.VERIFIED,
     )
+
+
+@pytest.mark.asyncio
+async def test_get_user(
+    users_repository: UsersRepository,
+    mock_session: AsyncMock,
+    existing_user: User,
+):
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = existing_user
     mock_session.execute = AsyncMock(return_value=mock_result)
 
-    filters = [User.id == 1]
+    filters = [User.id == existing_user.id]
     user = await users_repository.get_one_or_none(filters=filters)
 
     assert user is not None
-    assert user.id == 1
+    assert user.id == existing_user.id
     assert user.username == "username"
 
 
@@ -58,20 +65,17 @@ async def test_create_user(users_repository: UsersRepository, mock_session: Asyn
 
 
 @pytest.mark.asyncio
-async def test_update_user(users_repository: UsersRepository, mock_session: AsyncMock):
+async def test_update_user(
+    users_repository: UsersRepository,
+    mock_session: AsyncMock,
+    existing_user: User,
+):
     user_data = UserStatusUpdateModel(status=UserStatus.VERIFIED)
-    existing_user = User(
-        id=1,
-        username="username",
-        email="email@gmail.com",
-        avatar_url=None,
-        status=UserStatus.REGISTERED,
-    )
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = existing_user
     mock_session.execute = AsyncMock(return_value=mock_result)
 
-    result = await users_repository.update(user_id=1, body=user_data)
+    result = await users_repository.update(user_id=existing_user.id, body=user_data)
 
     assert result is not None
     assert result.status == UserStatus.VERIFIED
