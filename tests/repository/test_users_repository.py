@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import User, UserStatus
 from src.repository.users import UsersRepository
-from src.schemas.users import UserCreateModel, UserStatus, UserStatusUpdateModel
+from src.schemas.users import UserCreateModel, UserStatusUpdateModel
 
 
 @pytest.fixture
