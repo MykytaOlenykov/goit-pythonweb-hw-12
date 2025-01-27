@@ -1,8 +1,8 @@
 from datetime import date
+from unittest.mock import patch
 
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
 
 from src.database.models import User, Contact
 from src.utils.hashing import hash_secret
