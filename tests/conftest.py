@@ -5,7 +5,6 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.database.models import Base, User
 from src.database.db import get_db
@@ -17,21 +16,8 @@ from src.utils.hashing import hash_secret
 from src.main import app
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env.test",
-        env_file_encoding="utf-8",
-        extra="allow",
-    )
-
-    DB_URL: str
-
-
-settings = Settings()
-
-
 engine = create_async_engine(
-    settings.DB_URL,
+    "postgresql+asyncpg://postgres:12345@localhost:5432/postgres",
     poolclass=NullPool,
 )
 

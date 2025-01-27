@@ -54,18 +54,6 @@ async def init_contacts_db_with_defaults(current_test_user: User):
         await session.commit()
 
 
-@pytest_asyncio.fixture(scope="module", autouse=True)
-async def cleanup_contacts_db():
-    yield
-
-    async with TestingSessionLocal() as session:
-        await session.execute(delete(Contact))
-        await session.execute(
-            delete(User).where(User.email == "another_user@gmail.com")
-        )
-        await session.commit()
-
-
 def test_get_contacts(client: TestClient, get_access_token: str):
     response = client.get(
         "/api/contacts",
