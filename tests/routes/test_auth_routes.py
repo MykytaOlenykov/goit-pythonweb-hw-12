@@ -1,3 +1,4 @@
+import time
 from unittest.mock import Mock
 
 import pytest
@@ -6,11 +7,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select, delete
 
 from src.database.models import User, UserStatus, Token, TokenType
+from src.services.users import UsersService
 from src.services.tokens import TokensService
 from src.schemas.tokens import BaseTokenPayloadCreateModel
 from src.utils.hashing import hash_secret
 
-from tests.conftest import TestingSessionLocal
+from tests.conftest import TestingSessionLocal, test_user
 
 new_user_data = {
     "username": "test",
@@ -25,8 +27,8 @@ deleted_user_data = {
 }
 
 verified_user_data = {
-    "username": "verified_1",
-    "email": "verified_1@gmail.com",
+    "username": "verified",
+    "email": "verified@gmail.com",
     "password": "12345678",
 }
 
@@ -53,6 +55,21 @@ async def init_contacts_db_with_defaults():
         await session.commit()
 
 
+@pytest_asyncio.fixture
+async def get_verification_token():
+    async with TestingSessionLocal() as session:
+        await session.execute(delete(Token))
+        await session.commit()
+        user = await UsersService(session).get_by_email_or_none(
+            new_user_data.get("email")
+        )
+        if user is None:
+            raise ValueError("Not found test user")
+        payload = BaseTokenPayloadCreateModel(user_id=user.id)
+        token = await TokensService(session).create_verification_token(payload=payload)
+        return token.token
+
+
 def test_signup(client: TestClient, monkeypatch):
     mock_send_email = Mock()
     monkeypatch.setattr("src.services.mail.MailService.send_mail", mock_send_email)
@@ -67,6 +84,17 @@ def test_signup(client: TestClient, monkeypatch):
     response = client.post("api/auth/signup", json=new_user_data)
     assert response.status_code == 409, response.text
     assert response.json()["detail"] == "This email is already signed up"
+
+    # invalid email
+    response = client.post(
+        "api/auth/signup",
+        json={
+            "username": "test",
+            "email": "invalid-email",
+            "password": "12345678",
+        },
+    )
+    assert response.status_code == 400, response.text
 
 
 def test_login(client: TestClient):
@@ -127,3 +155,122 @@ def test_login(client: TestClient):
     assert "access_token" in data
     assert data["token_type"] == "bearer"
     assert response.cookies.get("refresh_token") is not None
+
+
+def test_logout(client: TestClient, get_access_token: str):
+    # login for get refresh_token
+    login_response = client.post(
+        "api/auth/login",
+        json={
+            "email": test_user.email,
+            "password": test_user.password,
+        },
+    )
+    assert login_response.status_code == 200, login_response.text
+    refresh_token = login_response.cookies.get("refresh_token")
+
+    # logout
+    client.cookies.set("refresh_token", refresh_token)
+    response = client.post(
+        "api/auth/logout",
+        headers={"Authorization": f"Bearer {get_access_token}"},
+    )
+    assert response.status_code == 204, response.text
+    assert response.cookies.get("refresh_token") is None
+
+    # Invalid refresh token
+    client.cookies.set("refresh_token", refresh_token)
+    response = client.post(
+        "api/auth/logout",
+        headers={"Authorization": f"Bearer {get_access_token}"},
+    )
+    assert response.status_code == 401, response.text
+    assert response.json()["detail"] == "Invalid refresh token"
+
+
+def test_refresh(client: TestClient):
+    # login for get refresh_token
+    login_response = client.post(
+        "api/auth/login",
+        json={
+            "email": test_user.email,
+            "password": test_user.password,
+        },
+    )
+    assert login_response.status_code == 200, login_response.text
+    refresh_token = login_response.cookies.get("refresh_token")
+    time.sleep(1)
+
+    # refresh
+    client.cookies.set("refresh_token", refresh_token)
+    response = client.post(
+        "api/auth/refresh",
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+    assert response.cookies.get("refresh_token") is not None
+
+    # Invalid refresh
+    client.cookies.set("refresh_token", "refresh_token")
+    response = client.post(
+        "api/auth/refresh",
+    )
+    assert response.status_code == 401, response.text
+
+
+def test_resend_verification_email(client: TestClient, monkeypatch):
+    # user not found
+    response = client.post("api/auth/verify", json={"email": "not_found@gmail.com"})
+    assert response.status_code == 401, response.text
+    assert response.json()["detail"] == "Invalid email"
+
+    # already verified
+    response = client.post(
+        "api/auth/verify",
+        json={"email": verified_user_data.get("email")},
+    )
+    assert response.status_code == 409, response.text
+    assert response.json()["detail"] == "User is already verified"
+
+    # resend verification email
+    mock_send_email = Mock()
+    monkeypatch.setattr("src.services.mail.MailService.send_mail", mock_send_email)
+    response = client.post(
+        "api/auth/verify",
+        json={"email": new_user_data.get("email")},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["message"] == (
+        "Please check your email to activate your account."
+    )
+
+
+def test_verify_user(client: TestClient, get_verification_token: str):
+    # invalid token
+    response = client.get("api/auth/verify/invalid-token")
+    assert response.status_code == 401, response.text
+    assert response.json()["detail"] == "Invalid token"
+
+    # verify user
+    response = client.get(
+        f"api/auth/verify/{get_verification_token}",
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["message"] == (
+        "Your email has been successfully verified. You can now log in to your account."
+    )
+
+
+def test_me(client: TestClient, get_access_token: str):
+    response = client.get(
+        "api/auth/me",
+        headers={"Authorization": f"Bearer {get_access_token}"},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert "id" in data
+    assert "username" in data
+    assert "email" in data
+    assert "avatar_url" in data

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from src.database.models import Base, User
+from src.database.models import Base, User, UserStatus
 from src.database.db import get_db
 from src.services.users import UsersService
 from src.services.tokens import TokensService
@@ -40,8 +40,12 @@ def init_models_wrap():
             await conn.run_sync(Base.metadata.create_all)
         async with TestingSessionLocal() as session:
             hash_password = hash_secret(test_user.password)
-            test_user.password = hash_password
-            current_user = User(**test_user.model_dump())
+            current_user = User(
+                email=test_user.email,
+                username=test_user.username,
+                password=hash_password,
+                status=UserStatus.VERIFIED,
+            )
             session.add(current_user)
             await session.commit()
 

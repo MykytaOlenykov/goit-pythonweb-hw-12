@@ -2,12 +2,12 @@ from pydantic import BaseModel, Field, EmailStr
 
 
 class LoginModel(BaseModel):
-    email: EmailStr = Field(max_length=255)
+    email: EmailStr
     password: str
 
 
 class VerifyModel(BaseModel):
-    email: EmailStr = Field(max_length=255)
+    email: EmailStr
 
 
 class ResponseSignupModel(BaseModel):

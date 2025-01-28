@@ -237,15 +237,16 @@ class AuthService:
         """
 
         user = await self.users_service.get_by_email_or_none(body.email)
-        user_id = user.id
-        username = user.username
-        email = user.email
 
         if user is None:
-            raise HTTPNotFoundException("Invalid email")
+            raise HTTPUnauthorizedException("Invalid email")
 
         if user.status != UserStatus.REGISTERED:
             raise HTTPConflictException("User is already verified")
+
+        user_id = user.id
+        username = user.username
+        email = user.email
 
         tokens = await self.tokens_service.get_tokens(
             user_id=user_id,

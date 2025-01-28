@@ -1,11 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 
 from src.database.models import UserStatus
 
 
 class UserCreateModel(BaseModel):
     username: str = Field(max_length=100)
-    email: str = Field(max_length=255)
+    email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8)
 
 
