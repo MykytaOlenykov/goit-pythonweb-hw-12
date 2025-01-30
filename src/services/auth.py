@@ -8,8 +8,12 @@ from src.database.models import TokenType, UserStatus
 from src.services.users import UsersService
 from src.services.tokens import TokensService
 from src.services.mail import MailService, conf
-from src.schemas.auth import LoginModel, VerifyModel, ResetPasswordModel
-from src.schemas.users import UserCreateModel
+from src.schemas.auth import (
+    LoginModel,
+    VerifyModel,
+    ResetPasswordModel,
+)
+from src.schemas.users import UserCreateModel, ChangePasswordModel
 from src.schemas.tokens import BaseTokenPayloadCreateModel, BaseTokenPayloadModel
 from src.schemas.mail import VerificationMail, ResetPasswordMail
 from src.utils.hashing import hash_secret, verify_secret
@@ -288,6 +292,54 @@ class AuthService:
             username=username,
         )
         self.mail_service.send_verification_mail(background_tasks, mail_body)
+
+    async def reset_password(self, token: str, body: ChangePasswordModel):
+        """
+        Resets the password for a user using a provided reset token.
+
+        This method validates the provided reset token, verifies that it is a valid and unexpired reset token,
+        decodes the token to get the user ID, and allows the user to reset their password.
+        If any validation fails (e.g., invalid token or expired token), an HTTPUnauthorizedException is raised.
+        Upon success, the user's password is updated and the token is deleted.
+
+        Args:
+            - token: str - The reset token sent to the user for password reset.
+            - body: ChangePasswordModel - The new password details, typically containing the user's new password.
+
+        Raises:
+            - HTTPUnauthorizedException: If the token is invalid, expired, or doesn't match the expected reset token type.
+            - HTTPNotFoundException: If the token is not found in the system or has already been used.
+            - ValidationError: If the payload in the token cannot be validated correctly.
+
+        Returns:
+            - None: The method does not return anything. It updates the user's password and deletes the token.
+        """
+
+        payload = decode_jwt(token=token)
+
+        if not payload:
+            raise HTTPUnauthorizedException("Invalid token")
+
+        try:
+            verified_payload = BaseTokenPayloadModel(**payload)
+        except ValidationError:
+            raise HTTPUnauthorizedException("Invalid token")
+
+        if verified_payload.token_type != TokenType.RESET:
+            raise HTTPUnauthorizedException("Invalid token")
+
+        try:
+            await self.tokens_service.get_token_or_fail(token)
+        except HTTPNotFoundException:
+            raise HTTPUnauthorizedException("Invalid token")
+
+        user = await self.users_service.get_by_id_or_fail(verified_payload.user_id)
+
+        hashed_password = hash_secret(body.password)
+        body.password = hashed_password
+
+        await self.users_service.change_user_password_by_id(user.id, body=body)
+        await self.tokens_service.delete_token(token)
 
     async def forgot_password(
         self,

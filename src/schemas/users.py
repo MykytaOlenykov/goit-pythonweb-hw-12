@@ -17,5 +17,9 @@ class UserAvatarUpdateModel(BaseModel):
     avatar_url: str
 
 
+class ChangePasswordModel(BaseModel):
+    password: str = Field(min_length=8)
+
+
 class ResponseAvatarModel(BaseModel):
     avatar_url: str

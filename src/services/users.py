@@ -8,6 +8,7 @@ from src.schemas.users import (
     UserCreateModel,
     UserStatusUpdateModel,
     UserAvatarUpdateModel,
+    ChangePasswordModel,
 )
 from src.utils.exceptions import HTTPNotFoundException
 from src.settings import settings
@@ -115,6 +116,31 @@ class UsersService:
         """
 
         body = UserStatusUpdateModel(status=status)
+        user = await self.users_repository.update(user_id=id, body=body)
+
+        if user is None:
+            raise HTTPNotFoundException("User not found")
+
+        return user
+
+    async def change_user_password_by_id(self, id: int, body: ChangePasswordModel):
+        """
+        Changes the password of a user by their ID.
+
+        This method updates the user's password using the provided ID and new password details.
+        If the user is not found, it raises a `HTTPNotFoundException`. If successful, it returns the updated user object.
+
+        Args:
+            - id: int - The ID of the user whose password needs to be changed.
+            - body: ChangePasswordModel - The new password details for the user, typically including the current password and the new one.
+
+        Raises:
+            - HTTPNotFoundException: If no user with the provided ID is found.
+
+        Returns:
+            - User: The updated user object after changing the password.
+        """
+
         user = await self.users_repository.update(user_id=id, body=body)
 
         if user is None:

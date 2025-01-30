@@ -40,3 +40,7 @@ class ResetPasswordModel(BaseModel):
 
 class ResponseResetPasswordModel(BaseModel):
     message: str
+
+
+class ResponseUpdatePasswordMode(ResponseResetPasswordModel):
+    pass

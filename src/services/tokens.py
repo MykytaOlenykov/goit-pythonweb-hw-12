@@ -31,7 +31,7 @@ class TokensService:
         TokenType.REFRESH: settings.JWT_REFRESH_EXPIRATION_SECONDS,
         TokenType.ACCESS: settings.JWT_ACCESS_EXPIRATION_SECONDS,
         TokenType.VERIFICATION: settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
-        TokenType.RESET: settings.JWT_REFRESH_EXPIRATION_SECONDS,
+        TokenType.RESET: settings.JWT_RESET_EXPIRATION_SECONDS,
     }
 
     def __init__(self, db: AsyncSession):
