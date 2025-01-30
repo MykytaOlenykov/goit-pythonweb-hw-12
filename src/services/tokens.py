@@ -63,7 +63,7 @@ class TokensService:
 
         return await self.tokens_repository.get_all(filters=filters)
 
-    async def get_token_or_none(self, token: str):
+    async def get_token_or_none(self, token: str, token_type: TokenType | None = None):
         """
         Retrieves a single token if it exists.
 
@@ -75,9 +75,11 @@ class TokensService:
         """
 
         filters = [Token.token == token]
+        if token_type is not None:
+            filters.append(Token.type == token_type)
         return await self.tokens_repository.get_one_or_none(filters=filters)
 
-    async def get_token_or_fail(self, token: str):
+    async def get_token_or_fail(self, token: str, token_type: TokenType | None = None):
         """
         Retrieves a single token, raises HTTPNotFoundException if not found.
 
@@ -91,7 +93,7 @@ class TokensService:
             - HTTPNotFoundException - If the token is not found.
         """
 
-        token = await self.get_token_or_none(token)
+        token = await self.get_token_or_none(token, token_type)
 
         if token is None:
             raise HTTPNotFoundException("Token not found")

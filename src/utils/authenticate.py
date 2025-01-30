@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
 
 from src.database.db import get_db
+from src.database.models import TokenType
 from src.services.users import UsersService
 from src.schemas.tokens import BaseTokenPayloadModel
 from src.utils.tokens import decode_jwt
@@ -52,6 +53,9 @@ async def authenticate(
         payload = decode_jwt(token) or {}
         verified_payload = BaseTokenPayloadModel(**payload)
     except ValidationError:
+        raise credentials_exception
+
+    if verified_payload.token_type != TokenType.ACCESS:
         raise credentials_exception
 
     users_service = UsersService(db)

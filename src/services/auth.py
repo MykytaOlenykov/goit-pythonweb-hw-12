@@ -154,6 +154,9 @@ class AuthService:
             await self.tokens_service.delete_token(refresh_token)
             raise HTTPUnauthorizedException("Invalid refresh token")
 
+        if verified_payload.token_type != TokenType.REFRESH:
+            raise HTTPUnauthorizedException("Invalid refresh token")
+
         new_payload = BaseTokenPayloadCreateModel(user_id=verified_payload.user_id)
         new_access_token = self.tokens_service.generate_token(
             token_type=TokenType.ACCESS,
@@ -186,7 +189,10 @@ class AuthService:
         if not refresh_token:
             raise HTTPUnauthorizedException("Invalid refresh token")
 
-        token = await self.tokens_service.get_token_or_none(refresh_token)
+        token = await self.tokens_service.get_token_or_none(
+            refresh_token,
+            token_type=TokenType.REFRESH,
+        )
 
         if not token:
             raise HTTPUnauthorizedException("Invalid refresh token")
