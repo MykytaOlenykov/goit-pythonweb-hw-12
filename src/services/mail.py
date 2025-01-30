@@ -4,7 +4,7 @@ from enum import Enum
 from fastapi import BackgroundTasks
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
-from src.schemas.mail import VerificationMail
+from src.schemas.mail import VerificationMail, ResetPasswordMail
 from src.settings import settings
 
 conf = ConnectionConfig(
@@ -31,6 +31,7 @@ class MailTemplates(str, Enum):
     """
 
     VERIFICATION = "verification-mail.html"
+    RESET_PASSWORD = "reset-password.html"
 
 
 class MailService:
@@ -101,4 +102,27 @@ class MailService:
             recipients=[body.email],
             template_body={**body.model_dump()},
             template_name=MailTemplates.VERIFICATION,
+        )
+
+    def send_reset_password_mail(
+        self,
+        background_tasks: BackgroundTasks,
+        body: ResetPasswordMail,
+    ):
+        """
+        Sends a reset password email.
+
+        Args:
+            background_tasks: BackgroundTasks - The background tasks for sending the email asynchronously.
+            body: ResetPasswordMail - The body of the reset password email containing the recipient's email and other necessary details.
+
+        Sends an email with a reset password link to the provided email address.
+        """
+
+        self.send_mail(
+            background_tasks=background_tasks,
+            subject="Reset password",
+            recipients=[body.email],
+            template_body={**body.model_dump()},
+            template_name=MailTemplates.RESET_PASSWORD,
         )

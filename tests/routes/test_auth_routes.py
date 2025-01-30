@@ -66,7 +66,10 @@ async def get_verification_token():
         if user is None:
             raise ValueError("Not found test user")
         payload = BaseTokenPayloadCreateModel(user_id=user.id)
-        token = await TokensService(session).create_verification_token(payload=payload)
+        token = await TokensService(session).create_token(
+            token_type=TokenType.VERIFICATION,
+            payload=payload,
+        )
         return token.token
 
 

@@ -8,10 +8,10 @@ from src.database.models import TokenType, UserStatus
 from src.services.users import UsersService
 from src.services.tokens import TokensService
 from src.services.mail import MailService, conf
-from src.schemas.auth import LoginModel, VerifyModel
+from src.schemas.auth import LoginModel, VerifyModel, ResetPasswordModel
 from src.schemas.users import UserCreateModel
 from src.schemas.tokens import BaseTokenPayloadCreateModel, BaseTokenPayloadModel
-from src.schemas.mail import VerificationMail
+from src.schemas.mail import VerificationMail, ResetPasswordMail
 from src.utils.hashing import hash_secret, verify_secret
 from src.utils.tokens import decode_jwt
 from src.settings import settings
@@ -66,7 +66,10 @@ class AuthService:
         created_user = await self.users_service.create(body)
 
         payload = BaseTokenPayloadCreateModel(user_id=created_user.id)
-        token = await self.tokens_service.create_verification_token(payload)
+        token = await self.tokens_service.create_token(
+            token_type=TokenType.VERIFICATION,
+            payload=payload,
+        )
 
         verification_url = urljoin(settings.BASE_URL, f"api/auth/verify/{token.token}")
         mail_body = VerificationMail(
@@ -107,8 +110,14 @@ class AuthService:
             raise HTTPUnauthorizedException("Invalid email or password")
 
         payload = BaseTokenPayloadCreateModel(user_id=user.id)
-        access_token = self.tokens_service.generate_access_token(payload)
-        refresh_token = await self.tokens_service.create_refresh_token(payload)
+        access_token = self.tokens_service.generate_token(
+            token_type=TokenType.ACCESS,
+            payload=payload,
+        )
+        refresh_token = await self.tokens_service.create_token(
+            token_type=TokenType.REFRESH,
+            payload=payload,
+        )
 
         return {"access_token": access_token, "refresh_token": refresh_token.token}
 
@@ -146,8 +155,14 @@ class AuthService:
             raise HTTPUnauthorizedException("Invalid refresh token")
 
         new_payload = BaseTokenPayloadCreateModel(user_id=verified_payload.user_id)
-        new_access_token = self.tokens_service.generate_access_token(new_payload)
-        new_refresh_token = await self.tokens_service.create_refresh_token(new_payload)
+        new_access_token = self.tokens_service.generate_token(
+            token_type=TokenType.ACCESS,
+            payload=new_payload,
+        )
+        new_refresh_token = await self.tokens_service.create_token(
+            token_type=TokenType.REFRESH,
+            payload=new_payload,
+        )
         data = {
             "access_token": new_access_token,
             "refresh_token": new_refresh_token.token,
@@ -255,7 +270,10 @@ class AuthService:
         await self.tokens_service.delete_many_tokens([token.token for token in tokens])
 
         payload = BaseTokenPayloadCreateModel(user_id=user_id)
-        token = await self.tokens_service.create_verification_token(payload)
+        token = await self.tokens_service.create_token(
+            token_type=TokenType.VERIFICATION,
+            payload=payload,
+        )
 
         verification_url = urljoin(settings.BASE_URL, f"api/auth/verify/{token.token}")
         mail_body = VerificationMail(
@@ -264,3 +282,57 @@ class AuthService:
             username=username,
         )
         self.mail_service.send_verification_mail(background_tasks, mail_body)
+
+    async def forgot_password(
+        self,
+        background_tasks: BackgroundTasks,
+        body: ResetPasswordModel,
+    ):
+        """
+        Handles the password reset request for a user.
+
+        This method checks if a user exists by the provided email. If the user is found but hasn't verified their account,
+        it raises an exception. If the user exists and is registered, it generates a new reset token, invalidates old tokens,
+        and sends a reset password email to the user.
+
+        Args:
+            background_tasks: BackgroundTasks - The background tasks for sending the email asynchronously.
+            body: ResetPasswordModel - The body of the reset password request containing the user's email.
+
+        Raises:
+            HTTPUnauthorizedException: If the user has not verified their account.
+
+        Returns:
+            None: The method does not return any data but sends an email with a reset password token if the process succeeds.
+        """
+
+        user = await self.users_service.get_by_email_or_none(email=body.email)
+
+        if user is None:
+            return
+
+        if user.status == UserStatus.REGISTERED:
+            raise HTTPUnauthorizedException("User needs to verify their account")
+
+        user_id = user.id
+        username = user.username
+        email = user.email
+
+        tokens = await self.tokens_service.get_tokens(
+            user_id=user_id,
+            type=TokenType.RESET,
+        )
+        await self.tokens_service.delete_many_tokens([token.token for token in tokens])
+
+        payload = BaseTokenPayloadCreateModel(user_id=user_id)
+        token = await self.tokens_service.create_token(
+            token_type=TokenType.RESET,
+            payload=payload,
+        )
+
+        mail_body = ResetPasswordMail(
+            reset_token=token.token,
+            email=email,
+            username=username,
+        )
+        self.mail_service.send_reset_password_mail(background_tasks, mail_body)

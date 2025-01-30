@@ -19,11 +19,13 @@ from src.schemas.users import UserCreateModel
 from src.schemas.auth import (
     LoginModel,
     VerifyModel,
+    ResetPasswordModel,
     ResponseSignupModel,
     ResponseLoginModel,
     ResponseRefreshModel,
     ResponseCurrentUserModel,
     ResponseVerifyModel,
+    ResponseResetPasswordModel,
 )
 from src.utils.authenticate import authenticate
 from src.utils.exceptions import (
@@ -174,3 +176,21 @@ async def resend_verification_email(
     auth_service = AuthService(db)
     await auth_service.resend_verification_email(background_tasks, body)
     return {"message": "Please check your email to activate your account."}
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseResetPasswordModel,
+    responses={**bad_request_response_docs, **unauthorized_response_docs},
+)
+async def forgot_password(
+    background_tasks: BackgroundTasks,
+    body: ResetPasswordModel,
+    db: AsyncSession = Depends(get_db),
+):
+    auth_service = AuthService(db)
+    await auth_service.forgot_password(background_tasks, body)
+    return {
+        "message": "If this email exists, we have sent password reset instructions."
+    }

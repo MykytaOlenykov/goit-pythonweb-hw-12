@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from src.database.models import Base, User, UserStatus
+from src.database.models import Base, User, UserStatus, TokenType
 from src.database.db import get_db
 from src.services.users import UsersService
 from src.services.tokens import TokensService
@@ -82,5 +82,8 @@ async def get_access_token(current_test_user: User):
     async with TestingSessionLocal() as session:
         tokens_service = TokensService(session)
         token_payload = BaseTokenPayloadCreateModel(user_id=current_test_user.id)
-        token = tokens_service.generate_access_token(token_payload)
+        token = tokens_service.generate_token(
+            token_type=TokenType.ACCESS,
+            payload=token_payload,
+        )
         return token

@@ -32,3 +32,11 @@ class ResponseCurrentUserModel(BaseModel):
 
 class ResponseVerifyModel(BaseModel):
     message: str
+
+
+class ResetPasswordModel(BaseModel):
+    email: EmailStr
+
+
+class ResponseResetPasswordModel(BaseModel):
+    message: str

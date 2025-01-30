@@ -21,13 +21,18 @@ class TokensService:
         - get_tokens: Retrieves tokens based on filters.
         - get_token_or_none: Retrieves a single token if it exists.
         - get_token_or_fail: Retrieves a single token, raises HTTPNotFoundException if not found.
-        - create: Creates a new token.
         - delete_token: Deletes a token by its string value.
         - delete_many_tokens: Deletes multiple tokens by their string values.
-        - create_verification_token: Creates a verification token.
-        - create_refresh_token: Creates a refresh token.
-        - generate_access_token: Generates an access token.
+        - create_token: Creates a token.
+        - generate_token: Generates a token.
     """
+
+    __TOKENS_EXPIRATIONS = {
+        TokenType.REFRESH: settings.JWT_REFRESH_EXPIRATION_SECONDS,
+        TokenType.ACCESS: settings.JWT_ACCESS_EXPIRATION_SECONDS,
+        TokenType.VERIFICATION: settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
+        TokenType.RESET: settings.JWT_REFRESH_EXPIRATION_SECONDS,
+    }
 
     def __init__(self, db: AsyncSession):
         self.tokens_repository = TokensRepository(db)
@@ -93,19 +98,6 @@ class TokensService:
 
         return token
 
-    async def create(self, body: TokenCreateModel):
-        """
-        Creates a new token.
-
-        Args:
-            - body: TokenCreateModel - The data for creating a token.
-
-        Returns:
-            - Token - The created token.
-        """
-
-        return await self.tokens_repository.create(body)
-
     async def delete_token(self, token: str):
         """
         Deletes a token by its string value.
@@ -136,74 +128,51 @@ class TokensService:
 
         await self.tokens_repository.delete_many(tokens)
 
-    async def create_verification_token(self, payload: BaseTokenPayloadCreateModel):
+    def generate_token(
+        self,
+        token_type: TokenType,
+        payload: BaseTokenPayloadCreateModel,
+    ):
         """
-        Creates a verification token.
+        Generates a JWT token.
 
         Args:
-            - payload: BaseTokenPayloadCreateModel - The payload data for the verification token.
+            - token_type (TokenType): The type of token to generate (e.g., ACCESS, REFRESH, VERIFICATION, RESET).
+            - payload (BaseTokenPayloadCreateModel): The payload data containing user-specific information.
 
         Returns:
-            - Token - The created verification token.
+            - str: The generated JWT token.
         """
 
         data = {
             **payload.model_dump(),
-            "token_type": TokenType.VERIFICATION,
-        }
-        jwt = create_jwt(
-            data=data,
-            expire_time_seconds=settings.JWT_VERIFICATION_EXPIRATION_SECONDS,
-        )
-        body = TokenCreateModel(
-            token=jwt,
-            type=TokenType.VERIFICATION,
-            user_id=payload.user_id,
-        )
-        return await self.create(body)
-
-    async def create_refresh_token(self, payload: BaseTokenPayloadCreateModel):
-        """
-        Creates a refresh token.
-
-        Args:
-            - payload: BaseTokenPayloadCreateModel - The payload data for the refresh token.
-
-        Returns:
-            - Token - The created refresh token.
-        """
-
-        data = {
-            **payload.model_dump(),
-            "token_type": TokenType.REFRESH,
-        }
-        jwt = create_jwt(
-            data=data,
-            expire_time_seconds=settings.JWT_REFRESH_EXPIRATION_SECONDS,
-        )
-        body = TokenCreateModel(
-            token=jwt,
-            type=TokenType.REFRESH,
-            user_id=payload.user_id,
-        )
-        return await self.create(body)
-
-    def generate_access_token(self, payload: BaseTokenPayloadCreateModel):
-        """
-        Generates an access token.
-
-        Args:
-            - payload: BaseTokenPayloadCreateModel - The payload data for the access token.
-
-        Returns:
-            - str - The generated access token.
-        """
-
-        data = {
-            **payload.model_dump(),
-            "token_type": TokenType.ACCESS,
+            "token_type": token_type,
         }
         return create_jwt(
             data=data,
-            expire_time_seconds=settings.JWT_ACCESS_EXPIRATION_SECONDS,
+            expire_time_seconds=self.__TOKENS_EXPIRATIONS[token_type],
         )
+
+    async def create_token(
+        self,
+        token_type: TokenType,
+        payload: BaseTokenPayloadCreateModel,
+    ):
+        """
+        Creates and stores a new authentication token.
+
+        Args:
+            - token_type (TokenType): The type of token to create.
+            - payload (BaseTokenPayloadCreateModel): The payload containing user-related data.
+
+        Returns:
+            - Token: The created token record from the database.
+        """
+
+        token = self.generate_token(token_type=token_type, payload=payload)
+        body = TokenCreateModel(
+            token=token,
+            type=token_type,
+            user_id=payload.user_id,
+        )
+        return await self.tokens_repository.create(body)
