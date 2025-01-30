@@ -16,6 +16,11 @@ class UserStatus(str, Enum):
     DELETED = "DELETED"
 
 
+class UserRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -29,6 +34,11 @@ class User(Base):
         default=UserStatus.REGISTERED,
         nullable=False,
     )
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(UserRole, name="user_role"),
+        default=UserRole.USER,
+        nullable=False,
+    )
 
     tokens: Mapped[List["Token"]] = relationship(back_populates="user")
     contacts: Mapped[List["Contact"]] = relationship(back_populates="user")
@@ -38,6 +48,7 @@ class TokenType(str, Enum):
     ACCESS = "ACCESS"
     REFRESH = "REFRESH"
     VERIFICATION = "VERIFICATION"
+    RESET = "RESET"
 
 
 class Token(Base):
