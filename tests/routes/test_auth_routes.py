@@ -73,6 +73,24 @@ async def get_verification_token():
         return token.token
 
 
+@pytest_asyncio.fixture
+async def get_reset_token():
+    async with TestingSessionLocal() as session:
+        await session.execute(delete(Token))
+        await session.commit()
+        user = await UsersService(session).get_by_email_or_none(
+            verified_user_data.get("email")
+        )
+        if user is None:
+            raise ValueError("Not found test user")
+        payload = BaseTokenPayloadCreateModel(user_id=user.id)
+        token = await TokensService(session).create_token(
+            token_type=TokenType.RESET,
+            payload=payload,
+        )
+        return token.token
+
+
 def test_signup(client: TestClient, monkeypatch):
     mock_send_email = Mock()
     monkeypatch.setattr("src.services.mail.MailService.send_mail", mock_send_email)
@@ -277,3 +295,57 @@ def test_me(client: TestClient, get_access_token: str):
     assert "username" in data
     assert "email" in data
     assert "avatar_url" in data
+
+
+def test_forgot_password(client: TestClient, monkeypatch):
+    # user not found
+    response = client.post(
+        "api/auth/reset-password",
+        json={"email": "not_found@gmail.com"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["message"] == (
+        "If this email exists, we have sent password reset instructions."
+    )
+
+    # forgot password
+    mock_send_email = Mock()
+    monkeypatch.setattr("src.services.mail.MailService.send_mail", mock_send_email)
+    response = client.post(
+        "api/auth/reset-password",
+        json={"email": new_user_data.get("email")},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["message"] == (
+        "If this email exists, we have sent password reset instructions."
+    )
+
+
+def test_reset_password(client: TestClient, get_reset_token: str):
+    # invalid token
+    response = client.post(
+        "api/auth/reset-password/invalid-token",
+        json={"password": "88888888"},
+    )
+    assert response.status_code == 401, response.text
+    assert response.json()["detail"] == "Invalid token"
+
+    # invalid body
+    response = client.post(
+        f"api/auth/reset-password/{get_reset_token}",
+        json={"password": "123"},
+    )
+    assert response.status_code == 400, response.text
+    data = response.json()
+    assert "detail" in data
+    assert isinstance(data["detail"], list)
+
+    # change password
+    response = client.post(
+        f"api/auth/reset-password/{get_reset_token}",
+        json={"password": "88888888"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["message"] == (
+        "Your password has been successfully changed."
+    )
