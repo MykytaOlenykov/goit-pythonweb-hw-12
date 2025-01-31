@@ -94,6 +94,13 @@ Authenticate
   :undoc-members:
   :show-inheritance:
 
+Role Guard
+--------------------------
+.. automodule:: src.utils.role_guard
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
 Hashing
 --------------------------
 .. automodule:: src.utils.hashing
