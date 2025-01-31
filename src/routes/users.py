@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
-from src.database.models import User, UserRole
+from src.database.models import UserRole
 from src.services.users import UsersService
-from src.schemas.users import ResponseAvatarModel
-from src.utils.authenticate import authenticate
+from src.schemas.users import ResponseAvatarModel, UserBaseModel
 from src.utils.role_guard import role_guard
 from src.utils.exceptions import (
     bad_request_response_docs,
@@ -28,7 +27,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 )
 async def change_avatar(
     avatar: UploadFile = File(),
-    user: User = Depends(role_guard([UserRole.ADMIN])),
+    user: UserBaseModel = Depends(role_guard([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db),
 ):
     users_service = UsersService(db)

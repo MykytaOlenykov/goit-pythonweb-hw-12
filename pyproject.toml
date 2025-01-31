@@ -21,6 +21,7 @@ fastapi-mail = "^1.4.2"
 slowapi = "^0.1.9"
 cloudinary = "^1.42.1"
 python-multipart = "^0.0.20"
+redis = "^5.2.0"
 
 
 [tool.poetry.group.dev.dependencies]

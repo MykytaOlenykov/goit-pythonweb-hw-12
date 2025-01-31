@@ -12,10 +12,9 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from src.database.db import get_db
-from src.database.models import User
 from src.services.auth import AuthService
 from src.settings import settings
-from src.schemas.users import UserCreateModel, ChangePasswordModel
+from src.schemas.users import UserCreateModel, ChangePasswordModel, UserBaseModel
 from src.schemas.auth import (
     LoginModel,
     VerifyModel,
@@ -128,8 +127,8 @@ async def refresh(
     response_model=ResponseCurrentUserModel,
     responses={**unauthorized_response_docs, **too_many_requests_response_docs},
 )
-@limiter.limit("5/minute")
-async def me(request: Request, user: User = Depends(authenticate)):
+# @limiter.limit("5/minute")
+async def me(request: Request, user: UserBaseModel = Depends(authenticate)):
     return {
         "id": user.id,
         "username": user.username,

@@ -4,8 +4,8 @@ from fastapi import APIRouter, Query, Depends, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
-from src.database.models import User
 from src.services.contacts import ContactsService
+from src.schemas.users import UserBaseModel
 from src.schemas.contacts import (
     ContactCreateModel,
     ContactUpdateModel,
@@ -34,7 +34,7 @@ async def get_contacts(
         default=None,
         description="Filter contacts with birthdays within the given number of days",
     ),
-    user: User = Depends(authenticate),
+    user: UserBaseModel = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
@@ -52,7 +52,7 @@ async def get_contacts(
 )
 async def get_contact_by_id(
     id: int,
-    user: User = Depends(authenticate),
+    user: UserBaseModel = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
@@ -67,7 +67,7 @@ async def get_contact_by_id(
 )
 async def create_contact(
     body: ContactCreateModel,
-    user: User = Depends(authenticate),
+    user: UserBaseModel = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
@@ -86,7 +86,7 @@ async def create_contact(
 async def update_contact_by_id(
     body: ContactUpdateModel,
     id: int,
-    user: User = Depends(authenticate),
+    user: UserBaseModel = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)
@@ -100,7 +100,7 @@ async def update_contact_by_id(
 )
 async def delete_contact_by_id(
     id: int,
-    user: User = Depends(authenticate),
+    user: UserBaseModel = Depends(authenticate),
     db: AsyncSession = Depends(get_db),
 ):
     contacts_service = ContactsService(db)

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     BASE_URL: str = "http://0.0.0.0:8000"
     DB_URL: str
+    REDIS_URL: str
     ECHO_SQL: bool = False
     CORS_ORIGINS: str = "*"
 

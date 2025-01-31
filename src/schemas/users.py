@@ -1,6 +1,15 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 
-from src.database.models import UserStatus
+from src.database.models import UserStatus, UserRole
+
+
+class UserBaseModel(BaseModel):
+    id: int
+    username: str
+    email: str
+    avatar_url: str | None
+    status: UserStatus
+    role: UserRole
 
 
 class UserCreateModel(BaseModel):

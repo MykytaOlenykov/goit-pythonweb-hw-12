@@ -3,9 +3,9 @@ from datetime import date, timedelta
 from sqlalchemy import or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import User
 from src.repository.contacts import ContactsRepository
 from src.database.models import Contact
+from src.schemas.users import UserBaseModel
 from src.schemas.contacts import ContactCreateModel, ContactUpdateModel
 from src.utils.exceptions import HTTPNotFoundException
 
@@ -30,7 +30,7 @@ class ContactsService:
 
     async def get_all(
         self,
-        user: User,
+        user: UserBaseModel,
         search: str | None = None,
         birthdays_within: int | None = None,
         offset: int | None = None,
@@ -41,7 +41,7 @@ class ContactsService:
         and filtering by upcoming birthdays.
 
         Args:
-            - user: User - The user whose contacts need to be fetched.
+            - user: UserBaseModel - The user whose contacts need to be fetched.
             - search: str | None - Optional search string for filtering contacts by name or email.
             - birthdays_within: int | None - Optional number of days to filter contacts by upcoming birthdays.
             - offset: int | None - Optional offset for pagination.
@@ -51,7 +51,7 @@ class ContactsService:
             - List of Contact objects that match the search and filter criteria.
         """
 
-        filters = [Contact.user == user]
+        filters = [Contact.user_id == user.id]
 
         if search is not None:
             filters.append(
@@ -81,12 +81,12 @@ class ContactsService:
             limit=limit,
         )
 
-    async def get_by_id(self, user: User, id: int):
+    async def get_by_id(self, user: UserBaseModel, id: int):
         """
         Retrieves a contact by its ID and associated user.
 
         Args:
-            - user: User - The user to whom the contact belongs.
+            - user: UserBaseModel - The user to whom the contact belongs.
             - id: int - The ID of the contact.
 
         Returns:
@@ -96,7 +96,7 @@ class ContactsService:
             - HTTPNotFoundException: If the contact with the specified ID is not found.
         """
 
-        filters = [Contact.id == id, Contact.user == user]
+        filters = [Contact.id == id, Contact.user_id == user.id]
         contact = await self.contacts_repository.get_one_or_none(filters=filters)
 
         if contact is None:
@@ -104,12 +104,12 @@ class ContactsService:
 
         return contact
 
-    async def create(self, user: User, body: ContactCreateModel):
+    async def create(self, user: UserBaseModel, body: ContactCreateModel):
         """
         Creates a new contact for the specified user.
 
         Args:
-            - user: User - The user to whom the contact will be added.
+            - user: UserBaseModel - The user to whom the contact will be added.
             - body: ContactCreateModel - Contains information for the new contact.
 
         Returns:
@@ -118,12 +118,17 @@ class ContactsService:
 
         return await self.contacts_repository.create(user_id=user.id, body=body)
 
-    async def update_by_id(self, user: User, body: ContactUpdateModel, id: int):
+    async def update_by_id(
+        self,
+        user: UserBaseModel,
+        body: ContactUpdateModel,
+        id: int,
+    ):
         """
         Updates an existing contact identified by ID.
 
         Args:
-            - user: User - The user to whom the contact belongs.
+            - user: UserBaseModel - The user to whom the contact belongs.
             - body: ContactUpdateModel - Contains updated information for the contact.
             - id: int - The ID of the contact to be updated.
 
@@ -137,12 +142,12 @@ class ContactsService:
         await self.get_by_id(user=user, id=id)
         return await self.contacts_repository.update(body=body, contact_id=id)
 
-    async def delete_by_id(self, user: User, id: int):
+    async def delete_by_id(self, user: UserBaseModel, id: int):
         """
         Deletes a contact identified by ID for the specified user.
 
         Args:
-            - user: User - The user to whom the contact belongs.
+            - user: UserBaseModel - The user to whom the contact belongs.
             - id: int - The ID of the contact to be deleted.
 
         Returns:
