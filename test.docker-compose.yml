@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  test_db_pythonweb:
+  test_postgresdb:
     image: postgres:latest
-    container_name: test_db_pythonweb
+    container_name: test_postgresdb
     restart: no
     ports:
       - "5432:5432"
@@ -13,3 +13,13 @@ services:
       - POSTGRES_PASSWORD=12345
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres=value
+
+  test_redisdb:
+    image: redis:7.4
+    command: redis-server --appendonly yes
+    container_name: test_redisdb
+    restart: no
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"

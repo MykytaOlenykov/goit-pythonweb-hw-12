@@ -5,9 +5,11 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from redis.asyncio import Redis
 
 from src.database.models import Base, User, UserStatus, UserRole, TokenType
 from src.database.db import get_db
+from src.redis.redis import RedisSessionManager, get_redis
 from src.services.users import UsersService
 from src.services.tokens import TokensService
 from src.schemas.users import UserCreateModel
@@ -24,6 +26,9 @@ engine = create_async_engine(
 TestingSessionLocal = async_sessionmaker(
     autocommit=False, autoflush=False, expire_on_commit=False, bind=engine
 )
+
+test_redis_manager = RedisSessionManager("redis://localhost:6379")
+
 
 test_user = UserCreateModel(
     email="user@gmail.com",
@@ -53,8 +58,8 @@ def init_models_wrap():
     asyncio.run(init_models())
 
 
-@pytest.fixture(scope="module")
-def client():
+@pytest_asyncio.fixture(scope="module")
+async def client():
     async def override_get_db():
         async with TestingSessionLocal() as session:
             try:
@@ -63,9 +68,16 @@ def client():
                 await session.rollback()
                 raise
 
-    app.dependency_overrides[get_db] = override_get_db
+    async def get_test_redis():
+        async with test_redis_manager.session() as redis_conn:
+            yield redis_conn
 
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_redis] = get_test_redis
+
+    await test_redis_manager.initialize()
     yield TestClient(app)
+    await test_redis_manager.close()
 
 
 @pytest_asyncio.fixture(scope="module")

@@ -34,7 +34,7 @@ services:
     networks:
       - pythonweb_redisdb_networks
     volumes:
-      - "./volumes/redis:/data"
+      - ./volumes/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s

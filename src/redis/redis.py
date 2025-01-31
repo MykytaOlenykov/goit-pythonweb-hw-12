@@ -18,7 +18,7 @@ class RedisSessionManager:
 
     async def close(self):
         if self._redis:
-            await self._redis.close()
+            await self._redis.aclose()
             self._redis = None
 
     @contextlib.asynccontextmanager
