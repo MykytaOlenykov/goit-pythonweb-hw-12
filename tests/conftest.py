@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from src.database.models import Base, User, UserStatus, TokenType
+from src.database.models import Base, User, UserStatus, UserRole, TokenType
 from src.database.db import get_db
 from src.services.users import UsersService
 from src.services.tokens import TokensService
@@ -45,6 +45,7 @@ def init_models_wrap():
                 username=test_user.username,
                 password=hash_password,
                 status=UserStatus.VERIFIED,
+                role=UserRole.ADMIN,
             )
             session.add(current_user)
             await session.commit()

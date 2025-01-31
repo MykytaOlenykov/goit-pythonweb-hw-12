@@ -44,6 +44,27 @@ unauthorized_response_docs = {
 }
 
 
+class HTTPForbiddenException(HTTPException):
+    def __init__(self, detail: str | None = None) -> None:
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=detail or "Forbidden",
+        )
+
+
+class ForbiddenModel(BaseModel):
+    detail: str
+    status_code: int = 403
+
+
+forbidden_response_docs = {
+    403: {
+        "model": ForbiddenModel,
+        "description": "Forbidden",
+    },
+}
+
+
 class HTTPNotFoundException(HTTPException):
     def __init__(self, detail: str | None = None) -> None:
         super().__init__(
