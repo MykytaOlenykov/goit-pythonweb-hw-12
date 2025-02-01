@@ -127,7 +127,7 @@ async def refresh(
     response_model=ResponseCurrentUserModel,
     responses={**unauthorized_response_docs, **too_many_requests_response_docs},
 )
-# @limiter.limit("5/minute")
+@limiter.limit("5/minute")
 async def me(request: Request, user: UserBaseModel = Depends(authenticate)):
     return {
         "id": user.id,
